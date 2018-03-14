@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -28,6 +27,8 @@ func printUsage() {
 	fmt.Println(" verify -base_url BASE_URL, base_url default is http://localhost:8000 - verify deposit and withdraw all supported exchange")
 	fmt.Println(" deposit -exchange EXCHANGE -amount AMOUNT -token TOKEN -base_url BASE_URL, base_url default is http://localhost:8000")
 	fmt.Println(" withdraw -exchange EXCHANGE -amount AMOUNT -token TOKEN -base_url BASE_URL, base_url default is http://localhost:8000")
+	fmt.Println(" getauthdata")
+	fmt.Println(" getpendingactivities")
 }
 
 func getTokenAmount(amount float64, token common.Token) string {
@@ -63,13 +64,22 @@ func run(verify *Verification) {
 			log.Panic(err.Error())
 		}
 	case "getauthdata":
-		authData, err := verify.GetAuthData(common.GetTimepoint())
+		_, err := verify.GetAuthData(common.GetTimepoint())
 		if err != nil {
 			log.Println(err.Error())
 			os.Exit(1)
 		}
-		jsonString, _ := json.Marshal(authData)
-		log.Println("Authdata", string(jsonString))
+	case "getpendingactivity":
+		_, err := verify.GetPendingActivities(common.GetTimepoint())
+		if err != nil {
+			log.Println(err.Error())
+			os.Exit(1)
+		}
+	case "getactivities":
+		_, err := verify.GetActivities(common.GetTimepoint())
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	default:
 		printUsage()
 		os.Exit(1)
