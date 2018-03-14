@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"math/big"
 	"os"
 
 	"github.com/KyberNetwork/reserve-data/cmd/configuration"
@@ -34,6 +35,20 @@ func printUsage() {
 func getTokenAmount(amount float64, token common.Token) string {
 	amountInt := amount * math.Pow10(int(token.Decimal))
 	return fmt.Sprintf("0x%0x", uint64(amountInt))
+}
+
+func floatToBigInt(val float64, token common.Token) string {
+	bigVal := new(big.Float)
+	bigVal.SetFloat64(val)
+
+	decimal := new(big.Float)
+	decimal.SetInt(big.NewInt(int64(math.Pow10(int(token.Decimal)))))
+
+	bigVal.Mul(bigVal, decimal)
+	result := new(big.Int)
+	bigVal.Int(result)
+
+	return fmt.Sprintf("0x%0x", result)
 }
 
 func run(verify *Verification) {
@@ -104,7 +119,7 @@ func run(verify *Verification) {
 		}
 
 		if *depositAmount > 0 {
-			amountStr = getTokenAmount(*depositAmount, token)
+			amountStr = floatToBigInt(*depositAmount, token)
 		} else {
 			log.Println("Amount must bigger than 0")
 		}
@@ -139,7 +154,7 @@ func run(verify *Verification) {
 		}
 
 		if *withdrawAmount > 0 {
-			amountStr = getTokenAmount(*withdrawAmount, token)
+			amountStr = floatToBigInt(*withdrawAmount, token)
 		} else {
 			log.Println("Amount must bigger than 0")
 		}
