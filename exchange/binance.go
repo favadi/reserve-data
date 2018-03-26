@@ -345,6 +345,11 @@ func (self *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 					result.DepositBalance[tokenID] = 0
 				}
 			}
+			if len(result.AvailableBalance) == 0 {
+				result.Valid = false
+				result.Status = false
+				result.Error = "Exchange return empty balance"
+			}
 		}
 	}
 	return result, nil
