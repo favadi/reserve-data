@@ -63,3 +63,24 @@ func TestJSONToActivityID(t *testing.T) {
 		}
 	}
 }
+
+type testNewExchangeInfo struct {
+	exchange *ExchangeInfo
+}
+
+func (t *testNewExchangeInfo) GetInfo() (ExchangeInfo, error) {
+	return *t.exchange, nil
+}
+
+func TestNewExchangeInfo(t *testing.T) {
+
+	tn := testNewExchangeInfo{exchange: NewExchangeInfo()}
+	exchangeInfo1, _ := tn.GetInfo()
+	t.Logf("exchange info 1: %p", &exchangeInfo1.mu)
+	exchangeInfo2, _ := tn.GetInfo()
+	t.Logf("exchange info 2: %p", &exchangeInfo2.mu)
+	exchangeInfo1.mu.Lock()
+	exchangeInfo2.mu.Lock()
+	exchangeInfo1.mu.Unlock()
+	exchangeInfo2.mu.Unlock()
+}
