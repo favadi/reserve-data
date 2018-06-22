@@ -77,7 +77,6 @@ func TestHTTPServerRebalanceQuadratic(t *testing.T) {
 	common.RegisterInternalActiveToken(common.Token{ID: "ETH"})
 
 	tmpDir, err := ioutil.TempDir("", "test_rebalance_quadratic")
-
 	if err != nil {
 		t.Fatal(err)
 	}

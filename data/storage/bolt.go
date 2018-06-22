@@ -1700,8 +1700,8 @@ func (self *BoltStorage) StorePendingRebalanceQuadratic(data []byte) error {
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_REBALANCE_QUADRATIC))
 		c := b.Cursor()
-		_, v := c.First()
-		if v != nil {
+		k, _ := c.First()
+		if k != nil {
 			return errors.New("pending rebalance quadratic equation exists")
 		}
 		return b.Put(boltutil.Uint64ToBytes(timepoint), data)
@@ -1715,8 +1715,8 @@ func (self *BoltStorage) GetPendingRebalanceQuadratic() (metric.RebalanceQuadrat
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_REBALANCE_QUADRATIC))
 		c := b.Cursor()
-		_, v := c.First()
-		if v == nil {
+		k, _ := c.First()
+		if k == nil {
 			return errors.New("there is no pending rebalance quadratic equation")
 		}
 		return json.Unmarshal(v, &result)
@@ -1777,6 +1777,9 @@ func (self *BoltStorage) GetRebalanceQuadratic() (metric.RebalanceQuadraticReque
 		b := tx.Bucket([]byte(REBALANCE_QUADRATIC))
 		c := b.Cursor()
 		_, v := c.Last()
+		if v == nil {
+			return error.New("there is no rebalan quadratic equation")
+		}
 		return json.Unmarshal(v, &result)
 	})
 	return result, err

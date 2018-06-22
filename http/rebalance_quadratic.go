@@ -77,8 +77,7 @@ func (h *HTTPServer) RejectRebalanceQuadratic(c *gin.Context) {
 	if !ok {
 		return
 	}
-	err := h.metric.RemovePendingRebalanceQuadratic()
-	if err != nil {
+	if err := h.metric.RemovePendingRebalanceQuadratic(); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
