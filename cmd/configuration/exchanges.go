@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -144,18 +145,26 @@ func NewExchangePool(
 	return &ExchangePool{exchanges}
 }
 
-func (self *ExchangePool) FetcherExchanges() []fetcher.Exchange {
+func (self *ExchangePool) FetcherExchanges() ([]fetcher.Exchange, error) {
 	result := []fetcher.Exchange{}
 	for _, ex := range self.Exchanges {
-		result = append(result, ex.(fetcher.Exchange))
+		fcEx, ok := ex.(fetcher.Exchange)
+		if !ok {
+			return result, errors.New("ExchangePool cannot be asserted  to fetcher exchange")
+		}
+		result = append(result, fcEx)
 	}
-	return result
+	return result, nil
 }
 
-func (self *ExchangePool) CoreExchanges() []common.Exchange {
+func (self *ExchangePool) CoreExchanges() ([]common.Exchange, error) {
 	result := []common.Exchange{}
 	for _, ex := range self.Exchanges {
-		result = append(result, ex.(common.Exchange))
+		cmEx, ok := ex.(common.Exchange)
+		if !ok {
+			return result, errors.New("ExchangePool cannot be asserted to core Exchange")
+		}
+		result = append(result, cmEx)
 	}
-	return result
+	return result, nil
 }

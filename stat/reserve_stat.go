@@ -218,7 +218,10 @@ func (self ReserveStats) GetHeatMap(fromTime, toTime uint64, tzparam int64) (com
 			return arrResult, err
 		}
 		for _, stat := range cStats {
-			s := stat.(common.MetricStats)
+			s, ok := stat.(common.MetricStats)
+			if !ok {
+				return arrResult, fmt.Errorf("cannot convert stat (%v) to MetricStat", s)
+			}
 			current := result[c]
 			result[c] = common.HeatmapType{
 				TotalETHValue:        current.TotalETHValue + s.ETHVolume,
@@ -269,7 +272,10 @@ func (self ReserveStats) GetTokenHeatmap(fromTime, toTime uint64, tokenStr, freq
 			return arrResult, err
 		}
 		for _, stat := range stats {
-			s := stat.(common.VolumeStats)
+			s, ok := stat.(common.VolumeStats)
+			if !ok {
+				return arrResult, fmt.Errorf("cannot convert stat (%v) to VolumeStats", s)
+			}
 			current := result[country]
 			result[country] = common.VolumeStats{
 				Volume:    current.Volume + s.Volume,
@@ -348,7 +354,7 @@ func (self ReserveStats) ControllPriceAnalyticSize() error {
 			if integrity && err == nil {
 				nPrunedRecords, err := self.analyticStorage.PruneExpiredPriceAnalyticData(common.TimeToTimepoint(t))
 				if err != nil {
-					log.Printf("StatPruner: Can not prune Price Analytic Data (%s)", err)
+					log.Printf("StatPruner: cannot prune Price Analytic Data (%s)", err)
 				} else if nPrunedRecords != nRecord {
 					log.Printf("StatPruner: Number of exported Data is %d, which is different from number of Pruned Data %d", nRecord, nPrunedRecords)
 				} else {
@@ -506,7 +512,11 @@ func (self ReserveStats) ExceedDailyLimit(address ethereum.Address) (bool, error
 				log.Printf("Got more than 1 day stats. This is a bug in GetUserVolume")
 			} else {
 				for _, volume := range volumeStats {
-					volumeValue := volume.(common.VolumeStats)
+					volumeValue, ok := volume.(common.VolumeStats)
+					if !ok {
+						log.Printf("cannot convert volume (%v) to VolumeStats", volume)
+						continue
+					}
 					totalVolume += volumeValue.USDAmount
 					break
 				}
