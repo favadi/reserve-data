@@ -1776,9 +1776,9 @@ func (self *BoltStorage) GetRebalanceQuadratic() (metric.RebalanceQuadraticReque
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(REBALANCE_QUADRATIC))
 		c := b.Cursor()
-		_, v := c.Last()
-		if v == nil {
-			return errors.New("there is no rebalan quadratic equation")
+		k, v := c.Last()
+		if k == nil {
+			return errors.New("there is no rebalance quadratic equation")
 		}
 		return json.Unmarshal(v, &result)
 	})
