@@ -24,7 +24,7 @@ type TokenMetricResponse struct {
 	Spread    float64
 }
 
-// Metric list for one token
+// MetricList list for one token
 type MetricList []TokenMetricResponse
 
 type MetricResponse struct {
@@ -46,14 +46,17 @@ type PWIEquation struct {
 	Data string `json:"data"`
 }
 
+//RebalanceControl represent status of rebalance, true is enable and false is disable
 type RebalanceControl struct {
 	Status bool `json:"status"`
 }
 
+//SetrateControl represent status of set rate ability, true is enable and false is disable
 type SetrateControl struct {
 	Status bool `json:"status"`
 }
 
+//TargetQtySet represent a set of target quantity
 type TargetQtySet struct {
 	TotalTarget        float64 `json:"total_target"`
 	ReserveTarget      float64 `json:"reserve_target"`
@@ -63,7 +66,27 @@ type TargetQtySet struct {
 
 //TargetQtyStruct object for save target qty
 type TargetQtyStruct struct {
-	SetTarget TargetQtySet `json:"set_target"`
+	SetTarget          TargetQtySet       `json:"set_target"`
+	RecommendedBalance map[string]float64 `json:"recommended_balance"`
+	ExchangeRatio      map[string]float64 `json:"exchange_ratio"`
+}
+
+//TokenTargetQtyV2 represent a map of token and its target quantity struct
+type TokenTargetQtyV2 map[string]TargetQtyStruct
+
+//IsValid validate token target quantity input
+func (tq TokenTargetQtyV2) IsValid() (bool, error) {
+	for k := range tq {
+		if _, err := common.GetInternalToken(k); err != nil {
+			return false, fmt.Errorf("Token %s is not supported", k)
+		}
+	}
+	return true, nil
+}
+
+//IsValid function validate target quantity struct
+func (tq TargetQtyStruct) IsValid() error {
+	return nil
 }
 
 // PWIEquationV2 contains the information of a PWI equation.

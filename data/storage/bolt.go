@@ -1423,10 +1423,11 @@ func (self *BoltStorage) RemovePendingStableTokenParams() error {
 	return err
 }
 
+//StorePendingTargetQtyV2 store value into pending target qty v2 bucket
 func (self *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
 	var (
 		err  error
-		temp = make(map[string]interface{})
+		temp metric.TokenTargetQtyV2
 	)
 
 	if err = json.Unmarshal(value, &temp); err != nil {
@@ -1443,6 +1444,7 @@ func (self *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
 	return err
 }
 
+//GetPendingTargetQtyV2 return current pending target quantity
 func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 	err := self.db.View(func(tx *bolt.Tx) error {
