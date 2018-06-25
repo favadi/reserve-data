@@ -1592,6 +1592,7 @@ func (self *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
+//SetTargetQtyV2 set token target quantity version 2
 func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfigurePermission})
 	if !ok {

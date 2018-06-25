@@ -1445,8 +1445,8 @@ func (self *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
 }
 
 //GetPendingTargetQtyV2 return current pending target quantity
-func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error) {
-	result := make(map[string]interface{})
+func (self *BoltStorage) GetPendingTargetQtyV2() (metric.TokenTargetQtyV2, error) {
+	result := metric.TokenTargetQtyV2{}
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(PENDING_TARGET_QUANTITY_V2))
 		k := []byte("current_pending_target_qty")
@@ -1460,7 +1460,7 @@ func (self *BoltStorage) GetPendingTargetQtyV2() (map[string]interface{}, error)
 }
 
 func (self *BoltStorage) ConfirmTargetQtyV2(value []byte) error {
-	temp := make(map[string]interface{})
+	temp := metric.TokenTargetQtyV2{}
 	err := json.Unmarshal(value, &temp)
 	if err != nil {
 		return fmt.Errorf("Rejected: Data could not be unmarshalled to defined format: %s", err)
@@ -1497,8 +1497,8 @@ func (self *BoltStorage) RemovePendingTargetQtyV2() error {
 }
 
 // GetTargetQtyV2 return the current target quantity
-func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
-	result := make(map[string]interface{})
+func (self *BoltStorage) GetTargetQtyV2() (metric.TokenTargetQtyV2, error) {
+	result := metric.TokenTargetQtyV2{}
 	err := self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(TARGET_QUANTITY_V2))
 		k := []byte("current_target_qty")
@@ -1533,8 +1533,8 @@ func (self *BoltStorage) GetTargetQtyV2() (map[string]interface{}, error) {
 // while token is a string, it is validated before it saved then no need to validate again here
 // totalTarget, reserveTarget, rebalanceThreshold and transferThreshold are float numbers
 // and they are also no need to check to error here also (so we can ignore as below)
-func convertTargetQtyV1toV2(target metric.TokenTargetQty) map[string]interface{} {
-	result := make(map[string]interface{})
+func convertTargetQtyV1toV2(target metric.TokenTargetQty) metric.TokenTargetQtyV2 {
+	result := metric.TokenTargetQtyV2{}
 	strTargets := strings.Split(target.Data, "|")
 	for _, target := range strTargets {
 		elements := strings.Split(target, "_")
