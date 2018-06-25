@@ -67,8 +67,8 @@ type TargetQtySet struct {
 //TargetQtyStruct object for save target qty
 type TargetQtyStruct struct {
 	SetTarget        TargetQtySet       `json:"set_target"`
-	RecommendBalance map[string]float64 `json:"recommend_balance"`
-	ExchangeRatio    map[string]float64 `json:"exchange_ratio"`
+	RecommendBalance map[string]float64 `json:"recomend_balance,omitempty"`
+	ExchangeRatio    map[string]float64 `json:"exchange_ratio,omitempty"`
 }
 
 //TokenTargetQtyV2 represent a map of token and its target quantity struct
