@@ -1,6 +1,7 @@
 package metric
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/KyberNetwork/reserve-data/common"
@@ -129,4 +130,28 @@ func (input PWIEquationRequestV2) IsValid() bool {
 	}
 
 	return true
+}
+
+//RebalanceQuadraticEquation represent an equation
+type RebalanceQuadraticEquation struct {
+	RebalanceQuadratic struct {
+		A float64 `json:"a"`
+		B float64 `json:"b"`
+		C float64 `json:"c"`
+	} `json:"rebalance_quadratic"`
+}
+
+//RebalanceQuadraticRequest represent data request to set rebalance quadratic
+//map[token]equation
+type RebalanceQuadraticRequest map[string]RebalanceQuadraticEquation
+
+//IsValid check if request data is valid
+//rq (requested data) follow format map["tokenID"]{"a": float64, "b": float64, "c": float64}
+func (rq RebalanceQuadraticRequest) IsValid() error {
+	for tokenID := range rq {
+		if _, err := common.GetInternalToken(tokenID); err != nil {
+			return fmt.Errorf("unsupported token %s", tokenID)
+		}
+	}
+	return nil
 }
