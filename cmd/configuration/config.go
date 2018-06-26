@@ -26,6 +26,19 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
+const (
+	infuraMainnetEndpoint     = "https://mainnet.infura.io"
+	infuraKovanEndpoint       = "https://kovan.infura.io"
+	infuraRopstenEndpoint     = "https://ropsten.infura.io"
+	myEtherAPIMainnetEndpoint = "https://api.myetherapi.com/eth"
+	myEtherAPIRopstenEndpoint = "https://api.myetherapi.com/rop"
+	semidNodeKyberEndpoint    = "https://semi-node.kyber.network"
+	myCryptoAPIEndpoint       = "https://api.mycryptoapi.com/eth"
+	mewGivethAPIEndpoint      = "https://mew.giveth.io/"
+
+	localDevChainEndpoint = "http://blockchain:8545"
+)
+
 // SettingPaths contains path of all setting files.
 type SettingPaths struct {
 	settingPath           string
@@ -167,7 +180,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 			7*time.Second,  // log fetching interval
 			10*time.Second, // rate fetching interval
 			2*time.Second,  // tradelog processing interval
-			2*time.Second)  // catlog processing interval
+			2*time.Second) // catlog processing interval
 		statControllerRunner = statpruner.NewControllerTickerRunner(24 * time.Hour)
 
 	}
@@ -292,9 +305,9 @@ var ConfigPaths = map[string]SettingPaths{
 		"dev_users.db",
 		"dev_fee_setrate.db",
 		"config.json",
-		"https://mainnet.infura.io",
+		infuraMainnetEndpoint,
 		[]string{
-			"https://api.myetherapi.com/eth",
+			myEtherAPIMainnetEndpoint,
 		},
 	),
 	common.KOVAN_MODE: NewSettingPaths(
@@ -308,7 +321,7 @@ var ConfigPaths = map[string]SettingPaths{
 		"kovan_users.db",
 		"kovan_fee_setrate.db",
 		"config.json",
-		"https://kovan.infura.io",
+		infuraKovanEndpoint,
 		[]string{},
 	),
 	common.PRODUCTION_MODE: NewSettingPaths(
@@ -322,12 +335,12 @@ var ConfigPaths = map[string]SettingPaths{
 		"mainnet_users.db",
 		"mainnet_fee_setrate.db",
 		"mainnet_config.json",
-		"https://mainnet.infura.io",
+		infuraMainnetEndpoint,
 		[]string{
-			"https://semi-node.kyber.network",
-			"https://api.mycryptoapi.com/eth",
-			"https://api.myetherapi.com/eth",
-			"https://mew.giveth.io/",
+			semidNodeKyberEndpoint,
+			myCryptoAPIEndpoint,
+			myEtherAPIMainnetEndpoint,
+			mewGivethAPIEndpoint,
 		},
 	),
 	common.MAINNET_MODE: NewSettingPaths(
@@ -341,13 +354,13 @@ var ConfigPaths = map[string]SettingPaths{
 		"mainnet_users.db",
 		"mainnet_fee_setrate.db",
 		"mainnet_config.json",
-		"https://mainnet.infura.io",
+		infuraMainnetEndpoint,
 		[]string{
-			"https://mainnet.infura.io",
-			"https://semi-node.kyber.network",
-			"https://api.mycryptoapi.com/eth",
-			"https://api.myetherapi.com/eth",
-			"https://mew.giveth.io/",
+			infuraMainnetEndpoint,
+			semidNodeKyberEndpoint,
+			myCryptoAPIEndpoint,
+			myEtherAPIMainnetEndpoint,
+			mewGivethAPIEndpoint,
 		},
 	),
 	common.STAGING_MODE: NewSettingPaths(
@@ -361,13 +374,13 @@ var ConfigPaths = map[string]SettingPaths{
 		"staging_users.db",
 		"staging_fee_setrate.db",
 		"staging_config.json",
-		"https://mainnet.infura.io",
+		infuraMainnetEndpoint,
 		[]string{
-			"https://mainnet.infura.io",
-			"https://semi-node.kyber.network",
-			"https://api.mycryptoapi.com/eth",
-			"https://api.myetherapi.com/eth",
-			"https://mew.giveth.io/",
+			infuraMainnetEndpoint,
+			semidNodeKyberEndpoint,
+			myCryptoAPIEndpoint,
+			myEtherAPIMainnetEndpoint,
+			mewGivethAPIEndpoint,
 		},
 	),
 	common.SIMULATION_MODE: NewSettingPaths(
@@ -381,9 +394,9 @@ var ConfigPaths = map[string]SettingPaths{
 		"core_users.db",
 		"core_fee_setrate.db",
 		"config.json",
-		"http://blockchain:8545",
+		localDevChainEndpoint,
 		[]string{
-			"http://blockchain:8545",
+			localDevChainEndpoint,
 		},
 	),
 	common.ROPSTEN_MODE: NewSettingPaths(
@@ -397,9 +410,9 @@ var ConfigPaths = map[string]SettingPaths{
 		"ropsten_users.db",
 		"ropsten_fee_setrate.db",
 		"config.json",
-		"https://ropsten.infura.io",
+		infuraRopstenEndpoint,
 		[]string{
-			"https://api.myetherapi.com/rop",
+			myEtherAPIRopstenEndpoint,
 		},
 	),
 	common.ANALYTIC_DEV_MODE: NewSettingPaths(
@@ -413,14 +426,12 @@ var ConfigPaths = map[string]SettingPaths{
 		"core_users.db",
 		"core_fee_setrate.db",
 		"config.json",
-		"http://blockchain:8545",
+		localDevChainEndpoint,
 		[]string{
-			"http://blockchain:8545",
+			localDevChainEndpoint,
 		},
 	),
 }
-
-var Baseurl string = "http://127.0.0.1"
 
 var BinanceInterfaces = make(map[string]binance.Interface)
 var HuobiInterfaces = make(map[string]huobi.Interface)
