@@ -111,6 +111,10 @@ func (self *Bittrex) Name() string {
 	return "bittrex"
 }
 
+func (self *Bittrex) Pairs() []common.TokenPair {
+	return self.pairs
+}
+
 func (self *Bittrex) QueryOrder(uuid string, timepoint uint64) (float64, float64, bool, error) {
 	result, err := self.interf.OrderStatus(uuid)
 	if err != nil {

@@ -109,10 +109,11 @@ func (self *Binance) UpdatePrecisionLimit(pair common.TokenPair, symbols []Binan
 	}
 }
 
+//UpdatePairsPrecision update precision for trading for pairs
 func (self *Binance) UpdatePairsPrecision() {
 	exchangeInfo, err := self.interf.GetExchangeInfo()
 	if err != nil {
-		log.Printf("Get exchange info failed: %s\n", err)
+		log.Panicf("Get exchange info from binance failed: %s", err.Error())
 	} else {
 		symbols := exchangeInfo.Symbols
 		for _, pair := range self.pairs {
@@ -144,6 +145,10 @@ func (self *Binance) ID() common.ExchangeID {
 
 func (self *Binance) Name() string {
 	return "binance"
+}
+
+func (self *Binance) Pairs() []common.TokenPair {
+	return self.pairs
 }
 
 func (self *Binance) QueryOrder(symbol string, id uint64) (done float64, remaining float64, finished bool, err error) {

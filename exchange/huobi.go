@@ -116,6 +116,10 @@ func (self *Huobi) Name() string {
 	return "huobi"
 }
 
+func (self *Huobi) Pairs() []common.TokenPair {
+	return self.pairs
+}
+
 func (self *Huobi) QueryOrder(symbol string, id uint64) (done float64, remaining float64, finished bool, err error) {
 	result, err := self.interf.OrderStatus(symbol, id)
 	if err != nil {
