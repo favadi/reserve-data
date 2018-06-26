@@ -1426,11 +1426,11 @@ func (self *BoltStorage) RemovePendingStableTokenParams() error {
 //StorePendingTargetQtyV2 store value into pending target qty v2 bucket
 func (self *BoltStorage) StorePendingTargetQtyV2(value []byte) error {
 	var (
-		err  error
-		temp metric.TokenTargetQtyV2
+		err         error
+		pendingData metric.TokenTargetQtyV2
 	)
 
-	if err = json.Unmarshal(value, &temp); err != nil {
+	if err = json.Unmarshal(value, &pendingData); err != nil {
 		return fmt.Errorf("Rejected: Data could not be unmarshalled to defined format: %s", err.Error())
 	}
 	err = self.db.Update(func(tx *bolt.Tx) error {
@@ -1459,14 +1459,16 @@ func (self *BoltStorage) GetPendingTargetQtyV2() (metric.TokenTargetQtyV2, error
 	return result, err
 }
 
+//ConfirmTargetQtyV2 check if confirm data match pending data and save it to confirm bucket
+//remove pending data from pending bucket
 func (self *BoltStorage) ConfirmTargetQtyV2(value []byte) error {
-	temp := metric.TokenTargetQtyV2{}
-	err := json.Unmarshal(value, &temp)
+	confirmTargetQty := metric.TokenTargetQtyV2{}
+	err := json.Unmarshal(value, &confirmTargetQty)
 	if err != nil {
 		return fmt.Errorf("Rejected: Data could not be unmarshalled to defined format: %s", err)
 	}
 	pending, err := self.GetPendingTargetQtyV2()
-	if eq := reflect.DeepEqual(pending, temp); !eq {
+	if eq := reflect.DeepEqual(pending, confirmTargetQty); !eq {
 		return fmt.Errorf("Rejected: confiming data isn't consistent")
 	}
 
@@ -1546,7 +1548,7 @@ func convertTargetQtyV1toV2(target metric.TokenTargetQty) metric.TokenTargetQtyV
 		reserveTarget, _ := strconv.ParseFloat(elements[2], 10)
 		rebalance, _ := strconv.ParseFloat(elements[3], 10)
 		withdraw, _ := strconv.ParseFloat(elements[4], 10)
-		result[token] = metric.TargetQtyStruct{
+		result[token] = metric.TargetQtyV2{
 			SetTarget: metric.TargetQtySet{
 				TotalTarget:        totalTarget,
 				ReserveTarget:      reserveTarget,

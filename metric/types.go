@@ -64,32 +64,24 @@ type TargetQtySet struct {
 	TransferThreshold  float64 `json:"transfer_threshold"`
 }
 
-//TargetQtyStruct object for save target qty
-type TargetQtyStruct struct {
+//TargetQtyV2 object for save target qty
+type TargetQtyV2 struct {
 	SetTarget        TargetQtySet       `json:"set_target"`
 	RecommendBalance map[string]float64 `json:"recomend_balance,omitempty"`
 	ExchangeRatio    map[string]float64 `json:"exchange_ratio,omitempty"`
 }
 
 //TokenTargetQtyV2 represent a map of token and its target quantity struct
-type TokenTargetQtyV2 map[string]TargetQtyStruct
+type TokenTargetQtyV2 map[string]TargetQtyV2
 
 //IsValid validate token target quantity input
 func (tq TokenTargetQtyV2) IsValid() (bool, error) {
 	for k := range tq {
-		log.Print(k)
-		token, err := common.GetInternalToken(k)
-		log.Printf("Token: %v, err: %v", token, err)
 		if _, err := common.GetInternalToken(k); err != nil {
 			return false, fmt.Errorf("Token %s is not supported", k)
 		}
 	}
 	return true, nil
-}
-
-//IsValid function validate target quantity struct
-func (tq TargetQtyStruct) IsValid() error {
-	return nil
 }
 
 // PWIEquationV2 contains the information of a PWI equation.
