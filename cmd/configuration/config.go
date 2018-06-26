@@ -180,7 +180,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths, addressConfig common
 			7*time.Second,  // log fetching interval
 			10*time.Second, // rate fetching interval
 			2*time.Second,  // tradelog processing interval
-			2*time.Second) // catlog processing interval
+			2*time.Second)  // catlog processing interval
 		statControllerRunner = statpruner.NewControllerTickerRunner(24 * time.Hour)
 
 	}
