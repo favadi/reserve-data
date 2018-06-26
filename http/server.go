@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -1591,6 +1592,7 @@ func (self *HTTPServer) GetTokenHeatmap(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
+//SetTargetQtyV2 set token target quantity version 2
 func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 	postForm, ok := self.Authenticated(c, []string{}, []Permission{ConfigurePermission})
 	if !ok {
@@ -1599,6 +1601,15 @@ func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 	value := []byte(postForm.Get("value"))
 	if len(value) > MAX_DATA_SIZE {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
+		return
+	}
+	var tokenTargetQty metric.TokenTargetQtyV2
+	if err := json.Unmarshal(value, &tokenTargetQty); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	if ok, err := tokenTargetQty.IsValid(); !ok {
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 	err := self.metric.StorePendingTargetQtyV2(value)
