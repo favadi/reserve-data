@@ -10,6 +10,7 @@ import (
 // Exchange represents a centralized exchange like Binance, Huobi...
 type Exchange interface {
 	ID() ExchangeID
+	//Pairs returns an array of token pair which the exchange supports
 	Pairs() []TokenPair
 	Address(token Token) (address ethereum.Address, supported bool)
 	UpdateDepositAddress(token Token, addr string)

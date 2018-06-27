@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -114,7 +115,7 @@ func (self *ExchangeInfo) Get(pair TokenPairID) (ExchangePrecisionLimit, error) 
 	if info, exist := self.data[pair]; exist {
 		return info, nil
 	}
-	return ExchangePrecisionLimit{}, fmt.Errorf("Token pair is not existed")
+	return ExchangePrecisionLimit{}, errors.New("Token pair is not existed")
 }
 
 //GetData return precision and limit when trading all token pairs of an exchange
