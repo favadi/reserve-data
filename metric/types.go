@@ -1,8 +1,8 @@
 package metric
 
 import (
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/KyberNetwork/reserve-data/common"
 )
@@ -135,19 +135,18 @@ type PWIEquationRequestV2 map[string]PWIEquationTokenV2
 // IsValid validates the input instance and return true if it is valid.
 // Example input:
 // [{"token_id": {equation_token}}, ...]
-func (input PWIEquationRequestV2) IsValid() bool {
+func (input PWIEquationRequestV2) IsValid() (bool, error) {
 	for tokenID, et := range input {
 		if !et.isValid() {
-			return false
+			return false, errors.New("Input require both bid and ask")
 		}
 
 		if _, err := common.GetInternalToken(tokenID); err != nil {
-			log.Printf("unsupported token %s", tokenID)
-			return false
+			return false, fmt.Errorf("unsupported token %s", tokenID)
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 //RebalanceQuadraticEquation represent an equation
