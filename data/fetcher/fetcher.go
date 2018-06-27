@@ -556,14 +556,27 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 			}
 			// in case there is something wrong with the cex and the activity is stuck for a very
 			// long time. We will just consider it as a failed activity.
-			timepoint, err := strconv.ParseUint(string(activity.Timestamp), 10, 64)
-			if err != nil {
+			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
+			if err1 != nil {
 				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
 			} else {
 				if common.GetTimepoint()-timepoint > uint64(MAX_ACTIVITY_LIFE_TIME*uint64(time.Hour))/uint64(time.Millisecond) {
 					result[id] = common.NewActivityStatus("failed", tx, blockNum, activity.MiningStatus, err)
 				} else {
 					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
+				}
+			}
+		} else {
+			timepoint, err1 := strconv.ParseUint(string(activity.Timestamp), 10, 64)
+			if err1 != nil {
+				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
+			} else {
+				if activity.Destination == string(exchange.ID()) &&
+					activity.ExchangeStatus == "done" &&
+					common.GetTimepoint()-timepoint > uint64(MAX_ACTIVITY_LIFE_TIME*uint64(time.Hour))/uint64(time.Millisecond) {
+					// the activity is still pending but its exchange status is done and it is stuck there for more than
+					// MAX_ACTIVITY_LIFE_TIME. This activity is considered failed.
+					result[activity.ID] = common.NewActivityStatus("failed", "", 0, activity.MiningStatus, nil)
 				}
 			}
 		}
