@@ -440,6 +440,10 @@ func (self *Fetcher) PersistSnapshot(
 			log.Printf("In PersistSnapshot: exchange activity status for %+v: %+v", activity.ID, activityStatus)
 			if activity.IsExchangePending() {
 				activity.ExchangeStatus = activityStatus.ExchangeStatus
+			} else {
+				if activityStatus.ExchangeStatus == "failed" {
+					activity.ExchangeStatus = activityStatus.ExchangeStatus
+				}
 			}
 			if activity.Result["tx"] != nil && activity.Result["tx"].(string) == "" {
 				activity.Result["tx"] = activityStatus.Tx
