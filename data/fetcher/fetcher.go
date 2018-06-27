@@ -560,7 +560,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 			if err != nil {
 				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
 			} else {
-				if common.GetTimepoint()-timepoint > uint64(MAX_ACTIVITY_LIFE_TIME*uint64(time.Hour)) {
+				if common.GetTimepoint()-timepoint > uint64(MAX_ACTIVITY_LIFE_TIME*uint64(time.Hour))/uint64(time.Millisecond) {
 					result[id] = common.NewActivityStatus("failed", tx, blockNum, activity.MiningStatus, err)
 				} else {
 					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
