@@ -10,6 +10,11 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
+// MAX_ACTIVITY_LIFE_TIME is the longest time of an activity. If the
+// activity is pending for more than MAX_ACVITY_LIFE_TIME, it will be
+// considered as failed.
+const MAX_ACTIVITY_LIFE_TIME uint64 = 6 // activity max life time in hour
+
 type Fetcher struct {
 	storage                Storage
 	globalStorage          GlobalStorage
@@ -549,7 +554,18 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 			} else {
 				continue
 			}
-			result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
+			// in case there is something wrong with the cex and the activity is stuck for a very
+			// long time. We will just consider it as a failed activity.
+			timepoint, err := strconv.ParseUint(string(activity.Timestamp), 10, 64)
+			if err != nil {
+				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
+			} else {
+				if common.GetTimepoint()-timepoint > uint64(MAX_ACTIVITY_LIFE_TIME*uint64(time.Hour)) {
+					result[id] = common.NewActivityStatus("failed", tx, blockNum, activity.MiningStatus, err)
+				} else {
+					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
+				}
+			}
 		}
 	}
 	return result
