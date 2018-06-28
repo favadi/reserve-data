@@ -42,8 +42,8 @@ func (self *HTTPServer) SetPWIEquationV2(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if !input.IsValid() {
-		httputil.ResponseFailure(c, httputil.WithReason("invalid input"))
+	if err := input.Validate(); err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
 

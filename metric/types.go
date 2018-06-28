@@ -2,7 +2,6 @@ package metric
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/KyberNetwork/reserve-data/common"
 )
@@ -74,14 +73,14 @@ type TargetQtyV2 struct {
 //TokenTargetQtyV2 represent a map of token and its target quantity struct
 type TokenTargetQtyV2 map[string]TargetQtyV2
 
-//IsValid validate token target quantity input
-func (tq TokenTargetQtyV2) IsValid() (bool, error) {
+//Validate validate token target quantity input.
+func (tq TokenTargetQtyV2) Validate() error {
 	for k := range tq {
 		if _, err := common.GetInternalToken(k); err != nil {
-			return false, fmt.Errorf("Token %s is not supported", k)
+			return fmt.Errorf("Token %s is not supported", k)
 		}
 	}
-	return true, nil
+	return nil
 }
 
 // PWIEquationV2 contains the information of a PWI equation.
@@ -96,7 +95,7 @@ type PWIEquationV2 struct {
 // PWIEquationTokenV2 is a mapping between a token id and a PWI equation.
 type PWIEquationTokenV2 map[string]PWIEquationV2
 
-// isValid validates the input instance and return true if it is valid.
+// validate checks if the equation has all the required fields.
 // Example:
 // {
 //  "bid": {
@@ -114,40 +113,36 @@ type PWIEquationTokenV2 map[string]PWIEquationV2
 //    "price_multiply_factor": "0"
 //  }
 //}
-func (et PWIEquationTokenV2) isValid() bool {
+func (et PWIEquationTokenV2) validate() error {
 	var requiredFields = []string{"bid", "ask"}
 	// validates that both bid and ask are present
-	if len(et) != len(requiredFields) {
-		return false
-	}
-
 	for _, field := range requiredFields {
 		if _, ok := et[field]; !ok {
-			return false
+			return fmt.Errorf("missing required field: %s", field)
 		}
 	}
-	return true
+	return nil
 }
 
 // PWIEquationRequestV2 is the input SetPWIEquationV2 api.
 type PWIEquationRequestV2 map[string]PWIEquationTokenV2
 
-// IsValid validates the input instance and return true if it is valid.
+// Validate returns nil if the input is valid, otherwise it will
+// return an error with detail which field is invalid.
 // Example input:
 // [{"token_id": {equation_token}}, ...]
-func (input PWIEquationRequestV2) IsValid() bool {
+func (input PWIEquationRequestV2) Validate() error {
 	for tokenID, et := range input {
-		if !et.isValid() {
-			return false
+		if err := et.validate(); err != nil {
+			return fmt.Errorf("invalid equation for token %s: %s", tokenID, err)
 		}
 
 		if _, err := common.GetInternalToken(tokenID); err != nil {
-			log.Printf("unsupported token %s", tokenID)
-			return false
+			return fmt.Errorf("unsupported token %s", tokenID)
 		}
 	}
 
-	return true
+	return nil
 }
 
 //RebalanceQuadraticEquation represent an equation
@@ -163,9 +158,9 @@ type RebalanceQuadraticEquation struct {
 //map[token]equation
 type RebalanceQuadraticRequest map[string]RebalanceQuadraticEquation
 
-//IsValid check if request data is valid
+//Validate check if request data is valid.
 //rq (requested data) follow format map["tokenID"]{"a": float64, "b": float64, "c": float64}
-func (rq RebalanceQuadraticRequest) IsValid() error {
+func (rq RebalanceQuadraticRequest) Validate() error {
 	for tokenID := range rq {
 		if _, err := common.GetInternalToken(tokenID); err != nil {
 			return fmt.Errorf("unsupported token %s", tokenID)
