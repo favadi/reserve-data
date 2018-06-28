@@ -645,6 +645,9 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 func ValidateExchangeInfo(exchange common.Exchange, data map[common.TokenPairID]common.ExchangePrecisionLimit) error {
 	pairs := exchange.Pairs()
 	for _, pair := range pairs {
+		// stable exchange is a simulated exchange which is not a real exchange
+		// we do not do rebalance on stable exchange then it also does not need to have exchange info (and it actully does not have one)
+		// therefore we skip checking it for supported tokens
 		if exchange.ID() == common.ExchangeID("stable_exchange") {
 			continue
 		}
