@@ -10,6 +10,22 @@
 
 ### Compatibility
 
+### 0.9.1 (2018-06-26)
+
+### Features:
+
+- Listed new tokens
+  - POLY
+  - LBA
+  - EDU
+  - CVC
+
+### Bug fixes:
+
+### Improvements:
+
+### Compatibility
+
 ## 0.9.0 (2018-06-19)
 
 ### Features:

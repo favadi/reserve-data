@@ -301,6 +301,34 @@
       "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "internal use": true,
       "listed": true
+    },
+    "POLY": {
+      "name": "Polymath",
+      "decimals": 18,
+      "address": "0x9992ec3cf6a55b00978cddf2b27bc6882d88d1ec",
+      "internal use": true,
+      "listed": true
+    },
+    "LBA": {
+      "name": "Libra Credit",
+      "decimals": 18,
+      "address": "0xfe5f141bf94fe84bc28ded0ab966c16b17490657",
+      "internal use": true,
+      "listed": true
+    },
+    "EDU": {
+      "name": "EduCoin",
+      "decimals": 18,
+      "address": "0xf263292e14d9d8ecd55b58dad1f1df825a874b7c",
+      "internal use": true,
+      "listed": true
+    },
+    "CVC": {
+      "name": "Civic",
+      "decimals": 8,
+      "address": "0x41e5560054824eA6B0732E656E3Ad64E20e94E45",
+      "internal use": true,
+      "listed": true
     }
   },
   "exchanges": {
@@ -330,7 +358,11 @@
     },
     "huobi": {
       "ETH": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "ABT": "0xb48ee85467bf613a22244084c1a46c2deac18dd0"
+      "ABT": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
+      "POLY": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
+      "LBA": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
+      "EDU": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
+      "CVC": "0xb48ee85467bf613a22244084c1a46c2deac18dd0"
     },
     "stable_exchange": {
       "ETH": "0xFDF28Bf25779ED4cA74e958d54653260af604C20",
