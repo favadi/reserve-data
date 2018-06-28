@@ -17,7 +17,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/metric"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/getsentry/raven-go"
+	raven "github.com/getsentry/raven-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
@@ -645,6 +645,9 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 func ValidateExchangeInfo(exchange common.Exchange, data map[common.TokenPairID]common.ExchangePrecisionLimit) error {
 	pairs := exchange.Pairs()
 	for _, pair := range pairs {
+		if exchange.ID() == common.ExchangeID("stable_exchange") {
+			continue
+		}
 		if _, exist := data[pair.PairID()]; !exist {
 			return fmt.Errorf("exchange info of %s lack of token %s", exchange.ID(), string(pair.PairID()))
 		}
