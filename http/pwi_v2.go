@@ -42,7 +42,7 @@ func (self *HTTPServer) SetPWIEquationV2(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if ok, err := input.IsValid(); !ok {
+	if err := input.Validate(); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}

@@ -17,7 +17,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/metric"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	raven "github.com/getsentry/raven-go"
+	"github.com/getsentry/raven-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sentry"
 	"github.com/gin-gonic/gin"
@@ -1608,7 +1608,7 @@ func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if ok, err := tokenTargetQty.IsValid(); !ok {
+	if err := tokenTargetQty.Validate(); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}

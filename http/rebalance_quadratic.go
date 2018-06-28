@@ -25,7 +25,7 @@ func (h *HTTPServer) SetRebalanceQuadratic(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if err := rq.IsValid(); err != nil {
+	if err := rq.Validate(); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
