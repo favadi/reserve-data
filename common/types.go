@@ -765,6 +765,7 @@ func NewTradeHistory(id string, price, qty float64, typ string, timestamp uint64
 	return TradeHistory{
 		ID:        id,
 		Price:     price,
+		Qty:       qty,
 		Type:      typ,
 		Timestamp: timestamp,
 	}
