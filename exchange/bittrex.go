@@ -91,16 +91,17 @@ func (self *Bittrex) GetInfo() (*common.ExchangeInfo, error) {
 	return self.exchangeInfo, nil
 }
 
-func (self *Bittrex) UpdatePairsPrecision() {
+//UpdatePairsPrecision thís function update pair precision for supported tokens on bittrex
+func (self *Bittrex) UpdatePairsPrecision() error {
 	exchangeInfo, err := self.interf.GetExchangeInfo()
-	if err == nil {
-		symbols := exchangeInfo.Pairs
-		for _, pair := range self.pairs {
-			self.UpdatePrecisionLimit(pair, symbols)
-		}
-	} else {
-		log.Printf("Get exchange info failed: %s\n", err)
+	if err != nil {
+		return fmt.Errorf("get exchange info failed: %s", err)
 	}
+	symbols := exchangeInfo.Pairs
+	for _, pair := range self.pairs {
+		self.UpdatePrecisionLimit(pair, symbols)
+	}
+	return nil
 }
 
 func (self *Bittrex) ID() common.ExchangeID {
@@ -109,6 +110,10 @@ func (self *Bittrex) ID() common.ExchangeID {
 
 func (self *Bittrex) Name() string {
 	return "bittrex"
+}
+
+func (self *Bittrex) Pairs() []common.TokenPair {
+	return self.pairs
 }
 
 func (self *Bittrex) QueryOrder(uuid string, timepoint uint64) (float64, float64, bool, error) {

@@ -62,6 +62,10 @@ func (self *StableEx) Name() string {
 	return "stable token exchange"
 }
 
+func (self *StableEx) Pairs() []common.TokenPair {
+	return self.pairs
+}
+
 func (self *StableEx) QueryOrder(symbol string, id uint64) (done float64, remaining float64, finished bool, err error) {
 	// TODO: see if trade order (a tx to dgx contract) is successful or not
 	// - successful: done = order amount, remaining = 0, finished = true, err = nil

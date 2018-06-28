@@ -641,6 +641,19 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 	}
 }
 
+//ValidateExchangeInfo validate if data is complete exchange info with all token pairs supported
+func ValidateExchangeInfo(exchange common.Exchange, data map[common.TokenPairID]common.ExchangePrecisionLimit) error {
+	pairs := exchange.Pairs()
+	for _, pair := range pairs {
+		if _, exist := data[pair.PairID()]; !exist {
+			return fmt.Errorf("exchange info of %s lack of token %s", exchange.ID(), string(pair.PairID()))
+		}
+	}
+	return nil
+}
+
+//GetExchangeInfo return exchange info of one exchange if it is given exchangeID
+//otherwise return all exchanges info
 func (self *HTTPServer) GetExchangeInfo(c *gin.Context) {
 	exchangeParam := c.Query("exchangeid")
 	if exchangeParam == "" {
@@ -651,22 +664,27 @@ func (self *HTTPServer) GetExchangeInfo(c *gin.Context) {
 				httputil.ResponseFailure(c, httputil.WithError(err))
 				return
 			}
-			data[string(ex.ID())] = exchangeInfo.GetData()
+			responseData := exchangeInfo.GetData()
+			if err := ValidateExchangeInfo(ex, responseData); err != nil {
+				httputil.ResponseFailure(c, httputil.WithError(err))
+				return
+			}
+			data[string(ex.ID())] = responseData
 		}
 		httputil.ResponseSuccess(c, httputil.WithData(data))
-	} else {
-		exchange, err := common.GetExchange(exchangeParam)
-		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
-		exchangeInfo, err := exchange.GetInfo()
-		if err != nil {
-			httputil.ResponseFailure(c, httputil.WithError(err))
-			return
-		}
-		httputil.ResponseSuccess(c, httputil.WithData(exchangeInfo.GetData()))
+		return
 	}
+	exchange, err := common.GetExchange(exchangeParam)
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	exchangeInfo, err := exchange.GetInfo()
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c, httputil.WithData(exchangeInfo.GetData()))
 }
 
 func (self *HTTPServer) GetPairInfo(c *gin.Context) {

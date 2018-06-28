@@ -90,7 +90,9 @@ func NewExchangePool(
 				go AsyncUpdateDepositAddress(bit, tokenID, addr, &wait)
 			}
 			wait.Wait()
-			bit.UpdatePairsPrecision()
+			if err := bit.UpdatePairsPrecision(); err != nil {
+				log.Panic(err)
+			}
 			exchanges[bit.ID()] = bit
 		case "binance":
 			binanceSigner := binance.NewSignerFromFile(settingPaths.secretPath)
@@ -111,7 +113,9 @@ func NewExchangePool(
 				go AsyncUpdateDepositAddress(bin, tokenID, addr, &wait)
 			}
 			wait.Wait()
-			bin.UpdatePairsPrecision()
+			if err := bin.UpdatePairsPrecision(); err != nil {
+				log.Panic(err)
+			}
 			exchanges[bin.ID()] = bin
 		case "huobi":
 			huobiSigner := huobi.NewSignerFromFile(settingPaths.secretPath)
@@ -138,7 +142,9 @@ func NewExchangePool(
 				go AsyncUpdateDepositAddress(huobi, tokenID, addr, &wait)
 			}
 			wait.Wait()
-			huobi.UpdatePairsPrecision()
+			if err := huobi.UpdatePairsPrecision(); err != nil {
+				log.Panic(err)
+			}
 			exchanges[huobi.ID()] = huobi
 		}
 	}

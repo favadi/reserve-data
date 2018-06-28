@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -107,27 +108,30 @@ func (self *ExchangeInfo) Update(pair TokenPairID, data ExchangePrecisionLimit) 
 	self.data[pair] = data
 }
 
+//Get return Exchange precision limit of on token pair of an exchange
 func (self *ExchangeInfo) Get(pair TokenPairID) (ExchangePrecisionLimit, error) {
 	self.mu.RLock()
 	defer self.mu.RUnlock()
 	if info, exist := self.data[pair]; exist {
 		return info, nil
-	} else {
-		return info, fmt.Errorf("Token pair is not existed")
 	}
+	return ExchangePrecisionLimit{}, errors.New("Token pair is not existed")
 }
 
+//GetData return precision and limit when trading all token pairs of an exchange
 func (self *ExchangeInfo) GetData() map[TokenPairID]ExchangePrecisionLimit {
 	self.mu.RLock()
 	defer self.mu.RUnlock()
 	return self.data
 }
 
+//TokenPairPrecision represent precision when trading a token pair
 type TokenPairPrecision struct {
 	Amount int
 	Price  int
 }
 
+//TokenPairAmountLimit represent amount min and max when trade a token pair
 type TokenPairAmountLimit struct {
 	Min float64
 	Max float64

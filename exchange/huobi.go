@@ -80,15 +80,16 @@ func (self *Huobi) UpdatePrecisionLimit(pair common.TokenPair, symbols HuobiExch
 	}
 }
 
-func (self *Huobi) UpdatePairsPrecision() {
+func (self *Huobi) UpdatePairsPrecision() error {
 	exchangeInfo, err := self.interf.GetExchangeInfo()
 	if err != nil {
-		log.Printf("Get exchange info failed: %s\n", err)
-	} else {
-		for _, pair := range self.pairs {
-			self.UpdatePrecisionLimit(pair, exchangeInfo)
-		}
+		return fmt.Errorf("get exchange info failed: %s", err)
 	}
+	for _, pair := range self.pairs {
+		self.UpdatePrecisionLimit(pair, exchangeInfo)
+	}
+
+	return nil
 }
 
 func (self *Huobi) GetInfo() (*common.ExchangeInfo, error) {
@@ -114,6 +115,10 @@ func (self *Huobi) ID() common.ExchangeID {
 
 func (self *Huobi) Name() string {
 	return "huobi"
+}
+
+func (self *Huobi) Pairs() []common.TokenPair {
+	return self.pairs
 }
 
 func (self *Huobi) QueryOrder(symbol string, id uint64) (done float64, remaining float64, finished bool, err error) {
