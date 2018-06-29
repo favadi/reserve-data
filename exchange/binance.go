@@ -342,6 +342,7 @@ func (self *Binance) FetchEBalanceData(timepoint uint64) (common.EBalanceEntry, 
 	return result, nil
 }
 
+//FetchOnePairTradeHistory fetch trade history for one pair from exchange
 func (self *Binance) FetchOnePairTradeHistory(
 	wait *sync.WaitGroup,
 	data *sync.Map,
@@ -375,16 +376,25 @@ func (self *Binance) FetchOnePairTradeHistory(
 	data.Store(pairString, result)
 }
 
+//FetchTradeHistory get all trade history for all tokens in the exchange
 func (self *Binance) FetchTradeHistory() {
 	t := time.NewTicker(10 * time.Minute)
+	pairs := []common.TokenPair{}
+	//get eth token, it should not have error, subject to ignore error
+	ethToken, _ := common.GetNetworkToken("ETH")
+	for _, token := range common.NetworkTokens() {
+		if token.ID != "ETH" {
+			pair := common.TokenPair{token, ethToken}
+			pairs = append(pairs, pair)
+		}
+	}
 	go func() {
 		for {
 			result := common.ExchangeTradeHistory{}
 			data := sync.Map{}
-			pairs := self.pairs
 			wait := sync.WaitGroup{}
-			var i int = 0
-			var x int = 0
+			var i int
+			var x int
 			for i < len(pairs) {
 				for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
 					wait.Add(1)

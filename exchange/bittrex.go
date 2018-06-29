@@ -391,14 +391,23 @@ func (self *Bittrex) FetchOnePairTradeHistory(
 	data.Store(pairString, result)
 }
 
+//FetchTradeHistory get all trade history for all pairs from bittrex exchange
 func (self *Bittrex) FetchTradeHistory() {
 	t := time.NewTicker(10 * time.Minute)
+	pairs := []common.TokenPair{}
+	//get eth token, it should not have error, subject to ignore error
+	ethToken, _ := common.GetNetworkToken("ETH")
+	for _, token := range common.NetworkTokens() {
+		if token.ID != "ETH" {
+			pair := common.TokenPair{token, ethToken}
+			pairs = append(pairs, pair)
+		}
+	}
 	go func() {
 		for {
 			result := map[common.TokenPairID][]common.TradeHistory{}
 			timepoint := common.GetTimepoint()
 			data := sync.Map{}
-			pairs := self.pairs
 			wait := sync.WaitGroup{}
 			for _, pair := range pairs {
 				wait.Add(1)
