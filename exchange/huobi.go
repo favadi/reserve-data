@@ -368,20 +368,9 @@ func (self *Huobi) FetchOnePairTradeHistory(
 //FetchTradeHistory get all trade history for all pairs from huobi exchange
 func (self *Huobi) FetchTradeHistory() {
 	t := time.NewTicker(10 * time.Minute)
-	pairs := []common.TokenPair{}
-	//get eth token, it should not have error, subject to ignore error
-	ethToken, _ := common.GetNetworkToken("ETH")
-	for _, token := range common.NetworkTokens() {
-		if token.ID != "ETH" {
-			pair := common.TokenPair{
-				Base:  token,
-				Quote: ethToken,
-			}
-			pairs = append(pairs, pair)
-		}
-	}
 	go func() {
 		for {
+			pairs := common.TradeHistoryTokenPairs()
 			result := map[common.TokenPairID][]common.TradeHistory{}
 			data := sync.Map{}
 			wait := sync.WaitGroup{}

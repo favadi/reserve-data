@@ -379,19 +379,8 @@ func (self *Binance) FetchOnePairTradeHistory(
 //FetchTradeHistory get all trade history for all tokens in the exchange
 func (self *Binance) FetchTradeHistory() {
 	t := time.NewTicker(10 * time.Minute)
-	pairs := []common.TokenPair{}
-	//get eth token, it should not have error, subject to ignore error
-	ethToken, _ := common.GetNetworkToken("ETH")
-	for _, token := range common.NetworkTokens() {
-		if token.ID != "ETH" {
-			pair := common.TokenPair{
-				Base:  token,
-				Quote: ethToken,
-			}
-			pairs = append(pairs, pair)
-		}
-	}
 	go func() {
+		pairs := common.TradeHistoryTokenPairs()
 		for {
 			result := common.ExchangeTradeHistory{}
 			data := sync.Map{}

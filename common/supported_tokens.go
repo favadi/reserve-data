@@ -216,6 +216,25 @@ func NetworkTokens() []Token {
 	return supportedTokens.GetTokens()
 }
 
+func TradeHistoryTokenPairs() []TokenPair {
+	var pairs []TokenPair
+	ethToken, err := GetNetworkToken("ETH")
+	if err != nil {
+		// core can't run without ETH, this should never happens
+		panic(err)
+	}
+	for _, token := range NetworkTokens() {
+		if token.ID != ethToken.ID {
+			pair := TokenPair{
+				Base:  token,
+				Quote: ethToken,
+			}
+			pairs = append(pairs, pair)
+		}
+	}
+	return pairs
+}
+
 // GetInternalToken gets token from SupportedToken and returns error
 // if the token is not supported
 func GetInternalToken(id string) (Token, error) {
