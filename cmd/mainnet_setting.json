@@ -373,10 +373,10 @@
     "huobi": {
       "ETH": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
       "ABT": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
-      "POLY": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "LBA": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "EDU": "0xb48ee85467bf613a22244084c1a46c2deac18dd0",
-      "CVC": "0xb48ee85467bf613a22244084c1a46c2deac18dd0"
+      "POLY": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
+      "LBA": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
+      "EDU": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66",
+      "CVC": "0x0c8fd73eaf6089ef1b91231d0a07d0d2ca2b9d66"
     },
     "stable_exchange": {
       "ETH": "0xFDF28Bf25779ED4cA74e958d54653260af604C20",
