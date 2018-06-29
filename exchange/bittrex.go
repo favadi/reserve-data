@@ -399,7 +399,10 @@ func (self *Bittrex) FetchTradeHistory() {
 	ethToken, _ := common.GetNetworkToken("ETH")
 	for _, token := range common.NetworkTokens() {
 		if token.ID != "ETH" {
-			pair := common.TokenPair{token, ethToken}
+			pair := common.TokenPair{
+				Base:  token,
+				Quote: ethToken,
+			}
 			pairs = append(pairs, pair)
 		}
 	}
