@@ -1571,6 +1571,182 @@ response
   }
 ```
 
+### Get rebalance quadratic - (signing required)
+
+```
+<host>:8000/rebalance-quadratic
+GET request
+
+```
+
+eg:
+```
+curl -X "GET" "http://localhost:8000/rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+```
+
+response:
+```
+{
+  "data": {
+    "EOS": {
+      "rebalance_quadratic": {
+        "a": 800,
+        "b": 600,
+        "c": 0
+      }
+    },
+    "ETH": {
+      "rebalance_quadratic": {
+        "a": 750,
+        "b": 500,
+        "c": 0
+      }
+    }
+  },
+  "success": true
+}
+```
+
+
+### Set rebalance quadratic equation - (signing required)
+
+```
+<host>:8000/set-rebalance-quadratic
+POST request
+Post form: json encoding data of rebalance quadratic equation
+```
+
+eg:
+
+```
+curl -X "POST" "http://localhost:8000/set-rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+     --data-urlencode "data={
+  "EOS":{
+    "rebalance_quadratic": {
+      "a": 750,
+      "b": 500,
+      "c": 0,
+    }
+  },
+  "ETH": {
+    "rebalance_quadratic": {
+      "a": 750,
+      "b": 500,
+      "c": 0,
+    }
+  }
+}"
+```
+
+response
+
+```
+  {
+    "success": true,
+  }
+```
+
+### Get pending rebalance quadratic - (signing required)
+
+```
+<host>:8000/pending-rebalance-quadratic
+GET request
+
+```
+
+eg:
+```
+curl -X "GET" "http://localhost:8000/pending-rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+```
+
+response:
+```
+{
+  "data": {
+    "EOS": {
+      "rebalance_quadratic": {
+        "a": 800,
+        "b": 600,
+        "c": 0
+      }
+    },
+    "ETH": {
+      "rebalance_quadratic": {
+        "a": 750,
+        "b": 500,
+        "c": 0
+      }
+    }
+  },
+  "success": true
+}
+```
+
+
+### Confirm rebalance quadratic equation - (signing required)
+
+```
+<host>:8000/confirm-rebalance-quadratic
+POST request
+Post form: json encoding data of pwis equation
+```
+
+eg
+
+```
+curl -X "POST" "http://localhost:8000/confirm-rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+     --data-urlencode "data={
+  "EOS":{
+    "rebalance_quadratic": {
+      "a": 750,
+      "b": 500,
+      "c": 0,
+    }
+  },
+  "ETH": {
+    "rebalance_quadratic": {
+      "a": 750,
+      "b": 500,
+      "c": 0,
+    }
+  }
+}"
+```
+
+response
+
+```
+  {
+    "success": true,
+  }
+```
+
+### Reject rebalance quadrtic equation - (signing required)
+
+```
+<host>:8000/reject-rebalance-quadratic
+POST request
+```
+
+eg
+
+```
+curl -X "POST" "http://localhost:8000/reject-rebalance-quadratic" \
+     -H 'Content-Type: application/x-www-form-urlencoded'
+```
+
+response
+
+```
+  {
+    "success": true,
+  }
+```
+
 ## Authentication
 All APIs that are marked with (signing required) must follow authentication mechanism below:
 
