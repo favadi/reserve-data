@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	PRICING_OP string = "pricingOP"
-	DEPOSIT_OP string = "depositOP"
+	pricingOP string = "pricingOP"
+	depositOP string = "depositOP"
 )
 
 // tbindex is where the token data stored in blockchain.
@@ -41,10 +41,10 @@ func newTBIndex(bulkIndex, indexInBulk uint64) tbindex {
 }
 
 const (
-	FeeToWalletEvent string = "0x366bc34352215bf0bd3b527cfd6718605e1f5938777e42bcd8ed92f578368f52"
-	BurnFeeEvent     string = "0xf838f6ddc89706878e3c3e698e9b5cbfbf2c0e3d3dcd0bd2e00f1ccf313e0185"
-	TradeEvent       string = "0x1849bd6a030a1bca28b83437fd3de96f3d27a5d172fa7e9c78e7b61468928a39"
-	UserCatEvent     string = "0x0aeb0f7989a09b8cccf58cea1aefa196ccf738cb14781d6910448dd5649d0e6e"
+	feeToWalletEvent string = "0x366bc34352215bf0bd3b527cfd6718605e1f5938777e42bcd8ed92f578368f52"
+	burnFeeEvent     string = "0xf838f6ddc89706878e3c3e698e9b5cbfbf2c0e3d3dcd0bd2e00f1ccf313e0185"
+	tradeEvent       string = "0x1849bd6a030a1bca28b83437fd3de96f3d27a5d172fa7e9c78e7b61468928a39"
+	userCatEvent     string = "0x0aeb0f7989a09b8cccf58cea1aefa196ccf738cb14781d6910448dd5649d0e6e"
 )
 
 var (
@@ -115,8 +115,8 @@ func (self *Blockchain) GetAddresses() *common.Addresses {
 		ReserveAddress:   self.rm,
 		FeeBurnerAddress: self.burnerAddr,
 		NetworkAddress:   self.networkAddr,
-		PricingOperator:  opAddrs[PRICING_OP],
-		DepositOperator:  opAddrs[DEPOSIT_OP],
+		PricingOperator:  opAddrs[pricingOP],
+		DepositOperator:  opAddrs[depositOP],
 	}
 }
 
@@ -155,12 +155,12 @@ func (self *Blockchain) LoadAndSetTokenIndices() error {
 
 func (self *Blockchain) RegisterPricingOperator(signer blockchain.Signer, nonceCorpus blockchain.NonceCorpus) {
 	log.Printf("reserve pricing address: %s", signer.GetAddress().Hex())
-	self.RegisterOperator(PRICING_OP, blockchain.NewOperator(signer, nonceCorpus))
+	self.RegisterOperator(pricingOP, blockchain.NewOperator(signer, nonceCorpus))
 }
 
 func (self *Blockchain) RegisterDepositOperator(signer blockchain.Signer, nonceCorpus blockchain.NonceCorpus) {
 	log.Printf("reserve depositor address: %s", signer.GetAddress().Hex())
-	self.RegisterOperator(DEPOSIT_OP, blockchain.NewOperator(signer, nonceCorpus))
+	self.RegisterOperator(depositOP, blockchain.NewOperator(signer, nonceCorpus))
 }
 
 func readablePrint(data map[ethereum.Address]byte) string {
@@ -226,7 +226,7 @@ func (self *Blockchain) SetRates(
 		newCSells,
 		self.tokenIndices,
 	)
-	opts, err := self.GetTxOpts(PRICING_OP, nonce, gasPrice, nil)
+	opts, err := self.GetTxOpts(pricingOP, nonce, gasPrice, nil)
 	if err != nil {
 		log.Printf("Getting transaction opts failed, err: %s", err)
 		return nil, err
@@ -268,9 +268,8 @@ func (self *Blockchain) SetRates(
 		}
 		if err != nil {
 			return nil, err
-		} else {
-			return self.SignAndBroadcast(tx, PRICING_OP)
 		}
+		return self.SignAndBroadcast(tx, pricingOP)
 	}
 }
 
@@ -279,48 +278,44 @@ func (self *Blockchain) Send(
 	amount *big.Int,
 	dest ethereum.Address) (*types.Transaction, error) {
 
-	opts, err := self.GetTxOpts(DEPOSIT_OP, nil, nil, nil)
+	opts, err := self.GetTxOpts(depositOP, nil, nil, nil)
 	if err != nil {
 		return nil, err
-	} else {
-		tx, err := self.GeneratedWithdraw(
-			opts,
-			ethereum.HexToAddress(token.Address),
-			amount, dest)
-		if err != nil {
-			return nil, err
-		} else {
-			return self.SignAndBroadcast(tx, DEPOSIT_OP)
-		}
 	}
+	tx, err := self.GeneratedWithdraw(
+		opts,
+		ethereum.HexToAddress(token.Address),
+		amount, dest)
+	if err != nil {
+		return nil, err
+	}
+	return self.SignAndBroadcast(tx, depositOP)
 }
 
 func (self *Blockchain) SetImbalanceStepFunction(token ethereum.Address, xBuy []*big.Int, yBuy []*big.Int, xSell []*big.Int, ySell []*big.Int) (*types.Transaction, error) {
-	opts, err := self.GetTxOpts(PRICING_OP, nil, nil, nil)
+	opts, err := self.GetTxOpts(pricingOP, nil, nil, nil)
 	if err != nil {
 		log.Printf("Getting transaction opts failed, err: %s", err)
 		return nil, err
-	} else {
-		tx, err := self.GeneratedSetImbalanceStepFunction(opts, token, xBuy, yBuy, xSell, ySell)
-		if err != nil {
-			return nil, err
-		}
-		return self.SignAndBroadcast(tx, PRICING_OP)
 	}
+	tx, err := self.GeneratedSetImbalanceStepFunction(opts, token, xBuy, yBuy, xSell, ySell)
+	if err != nil {
+		return nil, err
+	}
+	return self.SignAndBroadcast(tx, pricingOP)
 }
 
 func (self *Blockchain) SetQtyStepFunction(token ethereum.Address, xBuy []*big.Int, yBuy []*big.Int, xSell []*big.Int, ySell []*big.Int) (*types.Transaction, error) {
-	opts, err := self.GetTxOpts(PRICING_OP, nil, nil, nil)
+	opts, err := self.GetTxOpts(pricingOP, nil, nil, nil)
 	if err != nil {
 		log.Printf("Getting transaction opts failed, err: %s", err)
 		return nil, err
-	} else {
-		tx, err := self.GeneratedSetQtyStepFunction(opts, token, xBuy, yBuy, xSell, ySell)
-		if err != nil {
-			return nil, err
-		}
-		return self.SignAndBroadcast(tx, PRICING_OP)
 	}
+	tx, err := self.GeneratedSetQtyStepFunction(opts, token, xBuy, yBuy, xSell, ySell)
+	if err != nil {
+		return nil, err
+	}
+	return self.SignAndBroadcast(tx, pricingOP)
 }
 
 //====================== Readonly calls ============================
@@ -446,9 +441,8 @@ func (self *Blockchain) GetPrice(token ethereum.Address, block *big.Int, priceTy
 	opts := self.GetCallOpts(atBlock)
 	if priceType == "buy" {
 		return self.GeneratedGetRate(opts, token, block, true, qty)
-	} else {
-		return self.GeneratedGetRate(opts, token, block, false, qty)
 	}
+	return self.GeneratedGetRate(opts, token, block, false, qty)
 }
 
 func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Log, error) {
@@ -468,10 +462,10 @@ func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Lo
 		addresses,
 		[][]ethereum.Hash{
 			{
-				ethereum.HexToHash(TradeEvent),
-				ethereum.HexToHash(BurnFeeEvent),
-				ethereum.HexToHash(FeeToWalletEvent),
-				ethereum.HexToHash(UserCatEvent),
+				ethereum.HexToHash(tradeEvent),
+				ethereum.HexToHash(burnFeeEvent),
+				ethereum.HexToHash(feeToWalletEvent),
+				ethereum.HexToHash(userCatEvent),
 			},
 		},
 	)
@@ -495,10 +489,10 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 		if l.Removed {
 			log.Printf("LogFetcher - Log is ignored because it is removed due to chain reorg")
 		} else {
-			if prevLog == nil || (l.TxHash != prevLog.TxHash && l.Topics[0].Hex() != UserCatEvent) {
+			if prevLog == nil || (l.TxHash != prevLog.TxHash && l.Topics[0].Hex() != userCatEvent) {
 				if tradeLog != nil {
 					result = append(result, *tradeLog)
-					noTradeLog += 1
+					noTradeLog++
 					// log.Printf(
 					// 	"LogFetcher - Fetched logs: TxHash(%s), TxIndex(%d), blockno(%d)",
 					// 	tradeLog.TransactionHash.Hex(),
@@ -506,7 +500,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 					// 	tradeLog.BlockNumber,
 					// )
 				}
-				if len(l.Topics) > 0 && l.Topics[0].Hex() != UserCatEvent {
+				if len(l.Topics) > 0 && l.Topics[0].Hex() != userCatEvent {
 					// start new TradeLog
 					tradeLog = &common.TradeLog{}
 					tradeLog.BlockNumber = l.BlockNumber
@@ -526,7 +520,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 			} else {
 				topic := l.Topics[0]
 				switch topic.Hex() {
-				case UserCatEvent:
+				case userCatEvent:
 					addr, cat := LogDataToCatLog(l.Data)
 					t, err := self.InterpretTimestamp(
 						l.BlockNumber,
@@ -547,17 +541,17 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 						Address:         addr,
 						Category:        cat,
 					})
-					noCatLog += 1
-				case FeeToWalletEvent:
+					noCatLog++
+				case feeToWalletEvent:
 					reserveAddr, walletAddr, walletFee := LogDataToFeeWalletParams(l.Data)
 					tradeLog.ReserveAddress = reserveAddr
 					tradeLog.WalletAddress = walletAddr
 					tradeLog.WalletFee = walletFee.Big()
-				case BurnFeeEvent:
+				case burnFeeEvent:
 					reserveAddr, burnFees := LogDataToBurnFeeParams(l.Data)
 					tradeLog.ReserveAddress = reserveAddr
 					tradeLog.BurnFee = burnFees.Big()
-				case TradeEvent:
+				case tradeEvent:
 					srcAddr, destAddr, srcAmount, destAmount := LogDataToTradeParams(l.Data)
 					tradeLog.SrcAddress = srcAddr
 					tradeLog.DestAddress = destAddr
@@ -581,14 +575,14 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 					}
 				}
 			}
-			if len(l.Topics) > 0 && l.Topics[0].Hex() != UserCatEvent {
+			if len(l.Topics) > 0 && l.Topics[0].Hex() != userCatEvent {
 				prevLog = &logs[i]
 			}
 		}
 	}
 	if tradeLog != nil && (len(result) == 0 || tradeLog.TransactionHash != result[len(result)-1].TxHash()) {
 		result = append(result, *tradeLog)
-		noTradeLog += 1
+		noTradeLog++
 	}
 	log.Printf("LogFetcher - Fetched %d trade logs, %d cat logs", noTradeLog, noCatLog)
 	return result, nil
@@ -607,7 +601,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 // because the chain might be reorganized so we will invalidate it
 // and assign it to the nonce from node.
 func (self *Blockchain) SetRateMinedNonce() (uint64, error) {
-	nonceFromNode, err := self.GetMinedNonce(PRICING_OP)
+	nonceFromNode, err := self.GetMinedNonce(pricingOP)
 	if err != nil {
 		return nonceFromNode, err
 	}
@@ -616,14 +610,12 @@ func (self *Blockchain) SetRateMinedNonce() (uint64, error) {
 			self.localSetRateNonce = nonceFromNode
 			self.setRateNonceTimestamp = common.GetTimepoint()
 			return nonceFromNode, nil
-		} else {
-			return self.localSetRateNonce, nil
 		}
-	} else {
-		self.localSetRateNonce = nonceFromNode
-		self.setRateNonceTimestamp = common.GetTimepoint()
-		return nonceFromNode, nil
+		return self.localSetRateNonce, nil
 	}
+	self.localSetRateNonce = nonceFromNode
+	self.setRateNonceTimestamp = common.GetTimepoint()
+	return nonceFromNode, nil
 }
 
 func (self *Blockchain) GetPricingMethod(inputData string) (*abi.Method, error) {

@@ -19,11 +19,11 @@ import (
 	"github.com/KyberNetwork/reserve-data/stat"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/robfig/cron"
-	"gopkg.in/natefinch/lumberjack.v2"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (
-	STARTING_BLOCK uint64 = 5069586
+	startingBlock uint64 = 5069586
 )
 
 func backupLog(arch archive.Archive) {
@@ -178,7 +178,7 @@ func CreateDataCore(config *configuration.Config, kyberENV string, bc *blockchai
 func CreateStat(config *configuration.Config, kyberENV string, bc *blockchain.Blockchain) *stat.ReserveStats {
 	var deployBlock uint64
 	if kyberENV == common.MAINNET_MODE || kyberENV == common.PRODUCTION_MODE || kyberENV == common.DEV_MODE {
-		deployBlock = STARTING_BLOCK
+		deployBlock = startingBlock
 	}
 	statFetcher := stat.NewFetcher(
 		config.StatStorage,
