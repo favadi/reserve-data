@@ -382,13 +382,14 @@ func (self *Huobi) FetchOnePairTradeHistory(
 	data.Store(pairString, result)
 }
 
+//FetchTradeHistory get all trade history for all pairs from huobi exchange
 func (self *Huobi) FetchTradeHistory() {
 	t := time.NewTicker(10 * time.Minute)
 	go func() {
 		for {
+			pairs := common.TradeHistoryTokenPairs()
 			result := map[common.TokenPairID][]common.TradeHistory{}
 			data := sync.Map{}
-			pairs := self.pairs
 			wait := sync.WaitGroup{}
 			for _, pair := range pairs {
 				wait.Add(1)

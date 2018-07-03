@@ -403,14 +403,15 @@ func (self *Bittrex) FetchOnePairTradeHistory(
 	data.Store(pairString, result)
 }
 
+//FetchTradeHistory get all trade history for all pairs from bittrex exchange
 func (self *Bittrex) FetchTradeHistory() {
 	t := time.NewTicker(10 * time.Minute)
 	go func() {
+		pairs := common.TradeHistoryTokenPairs()
 		for {
 			result := map[common.TokenPairID][]common.TradeHistory{}
 			timepoint := common.GetTimepoint()
 			data := sync.Map{}
-			pairs := self.pairs
 			wait := sync.WaitGroup{}
 			for _, pair := range pairs {
 				wait.Add(1)
