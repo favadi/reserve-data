@@ -35,10 +35,6 @@ type HttpRunnerServer struct {
 // If no timestamp parameter is supplied, or it is invalid, returns the default one.
 func getTimePoint(c *gin.Context) uint64 {
 	timestamp := c.DefaultQuery("timestamp", "")
-	if timestamp == "" {
-		log.Printf("Interpreted timestamp(%s) to default - %d\n", timestamp, maxTimeSpot)
-		return maxTimeSpot
-	}
 	timepoint, err := strconv.ParseUint(timestamp, 10, 64)
 	if err != nil {
 		log.Printf("Interpreted timestamp(%s) to default - %d\n", timestamp, maxTimeSpot)

@@ -610,12 +610,14 @@ func (self *Blockchain) SetRateMinedNonce() (uint64, error) {
 			self.localSetRateNonce = nonceFromNode
 			self.setRateNonceTimestamp = common.GetTimepoint()
 			return nonceFromNode, nil
+		} else {
+			return self.localSetRateNonce, nil
 		}
-		return self.localSetRateNonce, nil
+	} else {
+		self.localSetRateNonce = nonceFromNode
+		self.setRateNonceTimestamp = common.GetTimepoint()
+		return nonceFromNode, nil
 	}
-	self.localSetRateNonce = nonceFromNode
-	self.setRateNonceTimestamp = common.GetTimepoint()
-	return nonceFromNode, nil
 }
 
 func (self *Blockchain) GetPricingMethod(inputData string) (*abi.Method, error) {

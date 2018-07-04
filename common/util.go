@@ -10,8 +10,6 @@ import (
 
 const truncLength int = 256
 
-// const truncLength int = 10000000
-
 func TruncStr(src []byte) []byte {
 	if len(src) > truncLength {
 		result := string(src[0:truncLength]) + "..."
