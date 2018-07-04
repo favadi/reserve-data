@@ -130,7 +130,7 @@ func CreateBlockchain(config *configuration.Config, kyberENV string) (bc *blockc
 		panic(err)
 	}
 	// we need to implicitly add old contract addresses to production
-	if kyberENV == common.PRODUCTION_MODE || kyberENV == common.MAINNET_MODE {
+	if kyberENV == common.ProductionMode || kyberENV == common.MainnetMode {
 		bc.AddOldBurners(ethereum.HexToAddress("0x4E89bc8484B2c454f2F7B25b612b648c45e14A8e"))
 	}
 
@@ -152,7 +152,7 @@ func CreateDataCore(config *configuration.Config, kyberENV string, bc *blockchai
 		config.World,
 		config.FetcherRunner,
 		config.ReserveAddress,
-		kyberENV == common.SIMULATION_MODE,
+		kyberENV == common.SimulationMode,
 	)
 	for _, ex := range config.FetcherExchanges {
 		dataFetcher.AddExchange(ex)
@@ -177,7 +177,7 @@ func CreateDataCore(config *configuration.Config, kyberENV string, bc *blockchai
 
 func CreateStat(config *configuration.Config, kyberENV string, bc *blockchain.Blockchain) *stat.ReserveStats {
 	var deployBlock uint64
-	if kyberENV == common.MAINNET_MODE || kyberENV == common.PRODUCTION_MODE || kyberENV == common.DEV_MODE {
+	if kyberENV == common.MainnetMode || kyberENV == common.ProductionMode || kyberENV == common.DevMode {
 		deployBlock = startingBlock
 	}
 	statFetcher := stat.NewFetcher(
