@@ -536,9 +536,11 @@ func (self *Fetcher) PersistSnapshot(
 		if !balance.Valid {
 			snapshot.Valid = false
 			if balance.Error != "" {
-				snapshot.Error += "; " + balance.Error
-			} else {
-				snapshot.Error += "; blockchain balance is not valid."
+				if snapshot.Error != "" {
+					snapshot.Error += "; " + balance.Error
+				} else {
+					snapshot.Error = balance.Error
+				}
 			}
 		}
 	}
