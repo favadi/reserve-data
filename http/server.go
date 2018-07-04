@@ -24,14 +24,14 @@ import (
 )
 
 const (
-	MAX_TIMESPOT   uint64 = 18446744073709551615
-	MAX_DATA_SIZE  int    = 1000000 //1 Megabyte in byte
-	START_TIMEZONE int64  = -11
-	END_TIMEZONE   int64  = 14
+	maxTimespot   uint64 = 18446744073709551615
+	maxDataSize   int    = 1000000 //1 Megabyte in byte
+	startTimezone int64  = -11
+	endTimezone   int64  = 14
 )
 
 var (
-	// errDataSizeExceed is returned when the post data is larger than MAX_DATA_SIZE.
+	// errDataSizeExceed is returned when the post data is larger than maxDataSize.
 	errDataSizeExceed = errors.New("the data size must be less than 1 MB")
 )
 
@@ -50,8 +50,8 @@ func getTimePoint(c *gin.Context, useDefault bool) uint64 {
 	timestamp := c.DefaultQuery("timestamp", "")
 	if timestamp == "" {
 		if useDefault {
-			log.Printf("Interpreted timestamp to default - %d\n", MAX_TIMESPOT)
-			return MAX_TIMESPOT
+			log.Printf("Interpreted timestamp to default - %d\n", maxTimespot)
+			return maxTimespot
 		} else {
 			timepoint := common.GetTimepoint()
 			log.Printf("Interpreted timestamp to current time - %d\n", timepoint)
@@ -60,8 +60,8 @@ func getTimePoint(c *gin.Context, useDefault bool) uint64 {
 	} else {
 		timepoint, err := strconv.ParseUint(timestamp, 10, 64)
 		if err != nil {
-			log.Printf("Interpreted timestamp(%s) to default - %d", timestamp, MAX_TIMESPOT)
-			return MAX_TIMESPOT
+			log.Printf("Interpreted timestamp(%s) to default - %d", timestamp, maxTimespot)
+			return maxTimespot
 		} else {
 			log.Printf("Interpreted timestamp(%s) to %d", timestamp, timepoint)
 			return timepoint
@@ -225,7 +225,7 @@ func (self *HTTPServer) GetRates(c *gin.Context) {
 	fromTime, _ := strconv.ParseUint(c.Query("fromTime"), 10, 64)
 	toTime, _ := strconv.ParseUint(c.Query("toTime"), 10, 64)
 	if toTime == 0 {
-		toTime = MAX_TIMESPOT
+		toTime = maxTimespot
 	}
 	data, err := self.app.GetRates(fromTime, toTime)
 	if err != nil {
@@ -1153,7 +1153,7 @@ func (self *HTTPServer) GetTradeSummary(c *gin.Context) {
 		return
 	}
 	tzparam, _ := strconv.ParseInt(c.Query("timeZone"), 10, 64)
-	if (tzparam < START_TIMEZONE) || (tzparam > END_TIMEZONE) {
+	if (tzparam < startTimezone) || (tzparam > endTimezone) {
 		httputil.ResponseFailure(c, httputil.WithReason("Timezone is not supported"))
 		return
 	}
@@ -1259,7 +1259,7 @@ func (self *HTTPServer) GetWalletStats(c *gin.Context) {
 		return
 	}
 	tzparam, _ := strconv.ParseInt(c.Query("timeZone"), 10, 64)
-	if (tzparam < START_TIMEZONE) || (tzparam > END_TIMEZONE) {
+	if (tzparam < startTimezone) || (tzparam > endTimezone) {
 		httputil.ResponseFailure(c, httputil.WithReason("Timezone is not supported"))
 		return
 	}
@@ -1355,7 +1355,7 @@ func (self *HTTPServer) GetCountryStats(c *gin.Context) {
 	}
 	country := c.Query("country")
 	tzparam, _ := strconv.ParseInt(c.Query("timeZone"), 10, 64)
-	if (tzparam < START_TIMEZONE) || (tzparam > END_TIMEZONE) {
+	if (tzparam < startTimezone) || (tzparam > endTimezone) {
 		httputil.ResponseFailure(c, httputil.WithReason("Timezone is not supported"))
 		return
 	}
@@ -1373,7 +1373,7 @@ func (self *HTTPServer) GetHeatMap(c *gin.Context) {
 		return
 	}
 	tzparam, _ := strconv.ParseInt(c.Query("timeZone"), 10, 64)
-	if (tzparam < START_TIMEZONE) || (tzparam > END_TIMEZONE) {
+	if (tzparam < startTimezone) || (tzparam > endTimezone) {
 		httputil.ResponseFailure(c, httputil.WithReason("Timezone is not supported"))
 		return
 	}
@@ -1402,7 +1402,7 @@ func (self *HTTPServer) UpdatePriceAnalyticData(c *gin.Context) {
 		return
 	}
 	value := []byte(postForm.Get("value"))
-	if len(value) > MAX_DATA_SIZE {
+	if len(value) > maxDataSize {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
@@ -1525,7 +1525,7 @@ func (self *HTTPServer) SetStableTokenParams(c *gin.Context) {
 		return
 	}
 	value := []byte(postForm.Get("value"))
-	if len(value) > MAX_DATA_SIZE {
+	if len(value) > maxDataSize {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
@@ -1543,7 +1543,7 @@ func (self *HTTPServer) ConfirmStableTokenParams(c *gin.Context) {
 		return
 	}
 	value := []byte(postForm.Get("value"))
-	if len(value) > MAX_DATA_SIZE {
+	if len(value) > maxDataSize {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
@@ -1623,7 +1623,7 @@ func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 		return
 	}
 	value := []byte(postForm.Get("value"))
-	if len(value) > MAX_DATA_SIZE {
+	if len(value) > maxDataSize {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
@@ -1664,7 +1664,7 @@ func (self *HTTPServer) ConfirmTargetQtyV2(c *gin.Context) {
 		return
 	}
 	value := []byte(postForm.Get("value"))
-	if len(value) > MAX_DATA_SIZE {
+	if len(value) > maxDataSize {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}

@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	BINANCE_EPSILON float64 = 0.0000001 // 10e-7
-	BATCH_SIZE      int     = 4
+	binanceEpsilon float64 = 0.0000001 // 10e-7
+	batchSize      int     = 4
 )
 
 type Binance struct {
@@ -158,7 +158,7 @@ func (self *Binance) QueryOrder(symbol string, id uint64) (done float64, remaini
 	} else {
 		done, _ := strconv.ParseFloat(result.ExecutedQty, 64)
 		total, _ := strconv.ParseFloat(result.OrigQty, 64)
-		return done, total - done, total-done < BINANCE_EPSILON, nil
+		return done, total - done, total-done < binanceEpsilon, nil
 	}
 }
 
@@ -252,7 +252,7 @@ func (self *Binance) FetchPriceData(timepoint uint64) (map[common.TokenPairID]co
 	var i int = 0
 	var x int = 0
 	for i < len(pairs) {
-		for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+		for x = i; x < len(pairs) && x < i+batchSize; x++ {
 			wait.Add(1)
 			pair := pairs[x]
 			go self.FetchOnePairData(&wait, pair, &data, timepoint)
@@ -404,7 +404,7 @@ func (self *Binance) FetchTradeHistory() {
 			var i int
 			var x int
 			for i < len(pairs) {
-				for x = i; x < len(pairs) && x < i+BATCH_SIZE; x++ {
+				for x = i; x < len(pairs) && x < i+batchSize; x++ {
 					wait.Add(1)
 					pair := pairs[x]
 					go self.FetchOnePairTradeHistory(&wait, &data, pair)

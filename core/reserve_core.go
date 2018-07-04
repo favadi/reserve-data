@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	// HIGH_BOUND_GAS_PRICE is the price we will try to use to get higher priority
+	// highBoundGasPrice is the price we will try to use to get higher priority
 	// than trade tx to avoid price front running from users.
-	HIGH_BOUND_GAS_PRICE float64 = 50.1
+	highBoundGasPrice float64 = 50.1
 
 	statusFailed    = "failed"
 	statusSubmitted = "submitted"
@@ -305,7 +305,7 @@ func calculateNewGasPrice(old *big.Int, count uint64) *big.Int {
 		// new = old + (50.1 - old) / (5 - count)
 		return old.Add(
 			old,
-			big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(HIGH_BOUND_GAS_PRICE), old), big.NewInt(int64(5-count))),
+			big.NewInt(0).Div(big.NewInt(0).Sub(common.GweiToWei(highBoundGasPrice), old), big.NewInt(int64(5-count))),
 		)
 	}
 }
@@ -393,7 +393,7 @@ func (self ReserveCore) SetRates(
 					} else {
 						recommendedPrice := self.blockchain.StandardGasPrice()
 						var initPrice *big.Int
-						if recommendedPrice == 0 || recommendedPrice > HIGH_BOUND_GAS_PRICE {
+						if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
 							initPrice = common.GweiToWei(10)
 						} else {
 							initPrice = common.GweiToWei(recommendedPrice)
