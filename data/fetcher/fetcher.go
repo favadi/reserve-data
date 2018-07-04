@@ -543,6 +543,22 @@ func (self *Fetcher) PersistSnapshot(
 	}
 	// note: only update status when it's pending status
 	snapshot.ExchangeBalances = allEBalances
+
+	// persist blockchain balance
+	// if blockchain balance is not valid then auth snapshot will also not valid
+	for _, balance := range bbalances {
+		if !balance.Valid {
+			snapshot.Valid = false
+			if balance.Error != "" {
+				if snapshot.Error != "" {
+					snapshot.Error += "; " + balance.Error
+				} else {
+					snapshot.Error = balance.Error
+				}
+			}
+		}
+	}
+	// persist blockchain balances
 	snapshot.ReserveBalances = bbalances
 	snapshot.PendingActivities = pendingActivities
 	return self.storage.StoreAuthSnapshot(snapshot, timepoint)
