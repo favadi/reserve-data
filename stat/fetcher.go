@@ -872,7 +872,7 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 				}
 				SetcountryFields(&l)
 				if dbErr := self.CheckDupAndStoreTradeLog(l, timepoint); dbErr != nil {
-					log.Printf("LogFetcher - at block %d, storing trade log failed, stop at current block and wait till next ticker, err: %+v", l.BlockNo(), err)
+					log.Printf("LogFetcher - at block %d, storing trade log failed, stop at current block and wait till next ticker, err: %+v", l.BlockNo(), dbErr)
 					return maxBlock, dbErr
 				}
 			} else if il.Type() == "SetCatLog" {
@@ -882,7 +882,7 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 					continue
 				}
 				if dbErr := self.CheckDupAndStoreCatLog(l, timepoint); dbErr != nil {
-					log.Printf("LogFetcher - at block %d, storing cat log failed, stop at current block and wait till next ticker, err: %+v", l.BlockNo(), err)
+					log.Printf("LogFetcher - at block %d, storing cat log failed, stop at current block and wait till next ticker, err: %+v", l.BlockNo(), dbErr)
 					return maxBlock, dbErr
 				}
 			}
