@@ -378,7 +378,7 @@ func (self ReserveCore) SetRates(
 				err = errors.New("Couldn't get mined nonce of set rate operator")
 			} else {
 				oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
-				log.Printf("old nonce: %v, old price: %v, count: %d, err: %v", oldNonce, oldPrice, count, common.ErrorToString(err))
+				log.Printf("old nonce: %v, old price: %v, count: %d, err: %s", oldNonce, oldPrice, count, common.ErrorToString(err))
 				if err != nil {
 					err = errors.New("Couldn't check pending set rate tx pool. Please try later")
 				} else {

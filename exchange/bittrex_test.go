@@ -41,7 +41,7 @@ func (self testBittrexInterface) CancelOrder(uuid string) (Bittcancelorder, erro
 func (self testBittrexInterface) DepositHistory(currency string) (Bittdeposithistory, error) {
 	res := Bittdeposithistory{}
 	err := json.Unmarshal([]byte(self.DepositHistoryMock), &res)
-	fmt.Printf("%v\n", common.ErrorToString(err))
+	fmt.Printf("%s\n", common.ErrorToString(err))
 	fmt.Printf("%v\n", res)
 	return res, err
 }
