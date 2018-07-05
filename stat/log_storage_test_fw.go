@@ -7,8 +7,6 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
-// const testHash string = "0x5f29695f9978ca672a330e8e722cc3df70c3ee15adb5fc6b380818d40ad9cf44"
-
 type LogStorageTest struct {
 	storage LogStorage
 }
@@ -22,7 +20,7 @@ func (self *LogStorageTest) TestCatLog() error {
 	var catLog = common.SetCatLog{
 		Timestamp:       111,
 		BlockNumber:     222,
-		TransactionHash: ethereum.HexToHash("testHash"),
+		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           1,
 		Address:         ethereum.HexToAddress(testUserAddr),
 		Category:        "test",
@@ -34,7 +32,7 @@ func (self *LogStorageTest) TestCatLog() error {
 	catLog = common.SetCatLog{
 		Timestamp:       333,
 		BlockNumber:     444,
-		TransactionHash: ethereum.HexToHash("testHash"),
+		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           2,
 		Address:         ethereum.HexToAddress(testUserAddr),
 		Category:        "test",
@@ -72,7 +70,7 @@ func (self *LogStorageTest) TestTradeLog() error {
 	var tradeLog = common.TradeLog{
 		Timestamp:       111,
 		BlockNumber:     222,
-		TransactionHash: ethereum.HexToHash("testHash"),
+		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           1,
 	}
 	err = self.storage.StoreTradeLog(tradeLog, 111)
@@ -82,7 +80,7 @@ func (self *LogStorageTest) TestTradeLog() error {
 	tradeLog = common.TradeLog{
 		Timestamp:       333,
 		BlockNumber:     444,
-		TransactionHash: ethereum.HexToHash("testHash"),
+		TransactionHash: ethereum.HexToHash("TESTHASH"),
 		Index:           2,
 	}
 	err = self.storage.StoreTradeLog(tradeLog, 333)
