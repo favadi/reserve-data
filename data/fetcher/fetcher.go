@@ -10,10 +10,10 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
-// MAX_ACTIVITY_LIFE_TIME is the longest time of an activity. If the
+// maxActivityLifeTime is the longest time of an activity. If the
 // activity is pending for more than MAX_ACVITY_LIFE_TIME, it will be
 // considered as failed.
-const MAX_ACTIVITY_LIFE_TIME uint64 = 6 // activity max life time in hour
+const maxActivityLifeTime uint64 = 6 // activity max life time in hour
 
 type Fetcher struct {
 	storage                Storage
@@ -679,7 +679,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 			if err1 != nil {
 				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
 			} else {
-				if common.GetTimepoint()-timepoint > uint64(MAX_ACTIVITY_LIFE_TIME*uint64(time.Hour))/uint64(time.Millisecond) {
+				if common.GetTimepoint()-timepoint > uint64(maxActivityLifeTime*uint64(time.Hour))/uint64(time.Millisecond) {
 					result[id] = common.NewActivityStatus("failed", tx, blockNum, activity.MiningStatus, err)
 				} else {
 					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
@@ -692,9 +692,9 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 			} else {
 				if activity.Destination == string(exchange.ID()) &&
 					activity.ExchangeStatus == "done" &&
-					common.GetTimepoint()-timepoint > uint64(MAX_ACTIVITY_LIFE_TIME*uint64(time.Hour))/uint64(time.Millisecond) {
+					common.GetTimepoint()-timepoint > uint64(maxActivityLifeTime*uint64(time.Hour))/uint64(time.Millisecond) {
 					// the activity is still pending but its exchange status is done and it is stuck there for more than
-					// MAX_ACTIVITY_LIFE_TIME. This activity is considered failed.
+					// maxActivityLifeTime. This activity is considered failed.
 					result[activity.ID] = common.NewActivityStatus("failed", "", 0, activity.MiningStatus, nil)
 				}
 			}
