@@ -1,6 +1,11 @@
+sudo: required
+
 go_import_path: github.com/KyberNetwork/reserve-data
 
 language: go
+
+services:
+  - docker
 
 install:
   - go get -u github.com/alecthomas/gometalinter
@@ -10,6 +15,10 @@ install:
 script:
   - gometalinter --config=gometalinter.json ./...
   - $GOPATH/bin/goveralls -v -service=travis-ci
+
+after_success:
+  - docker --version
+  - docker build -f Dockerfile.next -t kybernetwork/reserve-data .
 
 go:
   - "1.10.x"
