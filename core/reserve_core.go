@@ -88,7 +88,7 @@ func (self ReserveCore) Trade(
 			uid,
 			strconv.FormatFloat(done, 'f', -1, 64),
 			strconv.FormatFloat(remaining, 'f', -1, 64),
-			finished, err,
+			finished, common.ErrorToString(err),
 		)
 
 		return self.activityStorage.Record(
@@ -163,7 +163,7 @@ func (self ReserveCore) Deposit(
 		uid := uidGenerator(txhex)
 		log.Printf(
 			"Core ----------> Deposit to %s: token: %s, amount: %s, timestamp: %d ==> Result: tx: %s, error: %s",
-			exchange.ID(), token.ID, amount.Text(10), timepoint, txhex, err,
+			exchange.ID(), token.ID, amount.Text(10), timepoint, txhex, common.ErrorToString(err),
 		)
 		return self.activityStorage.Record(
 			"deposit",
@@ -378,7 +378,7 @@ func (self ReserveCore) SetRates(
 				err = errors.New("Couldn't get mined nonce of set rate operator")
 			} else {
 				oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
-				log.Printf("old nonce: %v, old price: %v, count: %d, err: %v", oldNonce, oldPrice, count, err)
+				log.Printf("old nonce: %v, old price: %v, count: %d, err: %v", oldNonce, oldPrice, count, common.ErrorToString(err))
 				if err != nil {
 					err = errors.New("Couldn't check pending set rate tx pool. Please try later")
 				} else {
@@ -440,7 +440,7 @@ func (self ReserveCore) SetRates(
 	)
 	log.Printf(
 		"Core ----------> Set rates: ==> Result: tx: %s, nonce: %s, price: %s, error: %s",
-		txhex, txnonce, txprice, err,
+		txhex, txnonce, txprice, common.ErrorToString(err),
 	)
 	return uid, err
 }

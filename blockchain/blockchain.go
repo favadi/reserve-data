@@ -334,7 +334,7 @@ func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint6
 	opts := self.GetCallOpts(atBlock)
 	balances, err := self.GeneratedGetBalances(opts, reserve, tokens)
 	returnTime := common.GetTimestamp()
-	log.Printf("Fetcher ------> balances: %v, err: %s", balances, err)
+	log.Printf("Fetcher ------> balances: %v, err: %s", balances, common.ErrorToString(err))
 	if err != nil {
 		for _, token := range common.InternalTokens() {
 			result[token.ID] = common.BalanceEntry{
