@@ -138,7 +138,7 @@ func CreateBlockchain(config *configuration.Config, kyberENV string) (bc *blockc
 
 	// old contract addresses are used for events fetcher
 	switch kyberENV {
-	case common.ProductionMode, common.MainnetMode:
+	case common.ProductionMode, common.MainnetMode, common.DevMode:
 		bc.AddOldBurners(ethereum.HexToAddress("0x4E89bc8484B2c454f2F7B25b612b648c45e14A8e"))
 		// contract v1
 		bc.AddOldNetwork(ethereum.HexToAddress("0x964F35fAe36d75B1e72770e244F6595B68508CF5"))
