@@ -331,11 +331,11 @@ func (self *StatStorageTest) TestWalletAddress() error {
 
 func (self *StatStorageTest) TestLastProcessedTradeLogTimePoint() error {
 	var err error
-	err = self.storage.SetLastProcessedTradeLogTimepoint(tradeSummaryAggregation, 45678)
+	err = self.storage.SetLastProcessedTradeLogTimepoint(TradeSummaryAggregation, 45678)
 	if err != nil {
 		return err
 	}
-	lastTimePoint, err := self.storage.GetLastProcessedTradeLogTimepoint(tradeSummaryAggregation)
+	lastTimePoint, err := self.storage.GetLastProcessedTradeLogTimepoint(TradeSummaryAggregation)
 	if err != nil {
 		return err
 	}
@@ -376,28 +376,7 @@ func (self *StatStorageTest) TestFirstTradeEver() error {
 	if err != nil {
 		return err
 	}
-	testUserAddr := ethereum.HexToAddress(testUserAddr)
-	timepoint, err := self.storage.GetFirstTradeEver(testUserAddr)
-	if err != nil {
-		return err
-	}
-	if timepoint != 45678 {
-		return fmt.Errorf("first trade ever error, expect timepoint 45678, got %d", timepoint)
-	}
-	timepoint, err = self.storage.GetFirstTradeEver(testUserAddr)
-	if err != nil {
-		return err
-	}
-	if timepoint != 45678 {
-		return (fmt.Errorf("first trade ever error with lower case addr, expect timepoint 45678, got %d", timepoint))
-	}
-	timepoint, err = self.storage.GetFirstTradeEver(testUserAddr)
-	if err != nil {
-		return err
-	}
-	if timepoint != 45678 {
-		return (fmt.Errorf("first trade ever error with upper case addr, expect timepoint 45678, got %d", timepoint))
-	}
+
 	tradelog = common.TradeLog{
 		Timestamp:   45678,
 		UserAddress: ethereum.HexToAddress(testWalletAddr),
