@@ -78,7 +78,7 @@ Where *<base>* is symbol of the base token and *<quote>* is symbol of the quote 
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/prices/omg/eth"
+curl -X GET "http://127.0.0.1:8000/prices/omg/eth"
 ```
 
 ### Get prices for all base-quote pairs
@@ -105,7 +105,7 @@ Where *<exchangeid>* is the id of the exchange, *<base>* is symbol of the base t
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/exchangeinfo/binance/omg/eth"
+curl -X GET "http://127.0.0.1:8000/exchangeinfo/binance/omg/eth"
 ```
 response:
 ```
@@ -123,7 +123,7 @@ url params:
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/exchangeinfo?exchangeid=binance"
+curl -X GET "http://127.0.0.1:8000/exchangeinfo?exchangeid=binance"
 ```
 response:
 ```
@@ -138,7 +138,7 @@ response:
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/exchangefees"
+curl -X GET "http://127.0.0.1:8000/exchangefees"
 ```
 response:
 ```
@@ -155,7 +155,7 @@ Where *<exchangeid>* is the id of the exchange
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/exchangefees/binance"
+curl -X GET "http://127.0.0.1:8000/exchangefees/binance"
 ```
 response:
 ```
@@ -170,7 +170,7 @@ response:
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/getrates"
+curl -X GET "http://127.0.0.1:8000/getrates"
 ```
 response:
 ```
@@ -188,7 +188,7 @@ url params:
 
 eg:
 ```
-curl -X GET "http://13.229.54.28:8000/get-all-rates"
+curl -X GET "http://127.0.0.1:8000/get-all-rates"
 ```
  response
 ```
