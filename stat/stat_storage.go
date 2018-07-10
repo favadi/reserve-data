@@ -26,7 +26,7 @@ type StatStorage interface {
 	SetBurnFeeStat(burnFeeStat map[string]common.BurnFeeStatsTimeZone, lastProcessedTimepoint uint64) error
 
 	SetWalletAddress(walletAddr ethereum.Address) error
-	GetWalletAddress() ([]string, error)
+	GetWalletAddresses() ([]string, error)
 
 	SetWalletStat(walletStats map[string]common.MetricStatsTimeZone, lastProcessedTimepoint uint64) error
 	SetCountry(country string) error

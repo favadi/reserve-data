@@ -436,8 +436,8 @@ func (self ReserveStats) GetWalletStats(fromTime uint64, toTime uint64, walletAd
 	return self.statStorage.GetWalletStats(fromTime, toTime, ethereum.HexToAddress(walletAddr), timezone)
 }
 
-func (self ReserveStats) GetWalletAddress() ([]string, error) {
-	return self.statStorage.GetWalletAddress()
+func (self ReserveStats) GetWalletAddresses() ([]string, error) {
+	return self.statStorage.GetWalletAddresses()
 }
 
 func (self ReserveStats) GetReserveRates(fromTime, toTime uint64, reserveAddr ethereum.Address) ([]common.ReserveRates, error) {

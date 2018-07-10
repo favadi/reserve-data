@@ -316,7 +316,7 @@ func (self *StatStorageTest) TestWalletAddress() error {
 	if err != nil {
 		return err
 	}
-	walletaddresses, err := self.storage.GetWalletAddress()
+	walletaddresses, err := self.storage.GetWalletAddresses()
 	if err != nil {
 		return err
 	}
