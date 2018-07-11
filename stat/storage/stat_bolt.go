@@ -24,7 +24,6 @@ const (
 	hourBucket   string = "hour"
 	dayBucket    string = "day"
 
-	addressBucketPrefix string = "address"
 	walletAddressBucket string = "wallet_address"
 	reserveRates        string = "reserve_rates"
 	countryBucket       string = "country_stat_bucket"
