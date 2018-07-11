@@ -357,7 +357,7 @@ func (self *BoltStatStorage) GetWalletStats(fromTime uint64, toTime uint64, ethW
 			return nil
 		}
 		timezoneBk := walletBk.Bucket([]byte(tzstring))
-		if timezoneBk != nil {
+		if timezoneBk == nil {
 			log.Printf("GetWalletStats cannot find bucket %s->%s", walletAddr, tzstring)
 			return nil
 		}
