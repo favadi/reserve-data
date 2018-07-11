@@ -8,6 +8,8 @@
 
 ### Improvements:
 
+- build binary only docker image (#339)
+
 ### Compatibility
 
 ## 0.10.0 (2018-07-03)
