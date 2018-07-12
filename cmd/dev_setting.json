@@ -27,7 +27,7 @@
       "minimalRecordResolution": "1000000000000000",
       "maxPerBlockImbalance": "938890140546807627776",
       "maxTotalImbalance": "1542127055848131526656",
-      "internal use": true,
+      "internal use": false,
       "listed": true
     },
     "SNT": {
@@ -317,19 +317,13 @@
     },
     "huobi": {
       "ETH": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "OMG": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "KNC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "SNT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "EOS": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "ELF": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "POWR": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "MANA": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "BAT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "REQ": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "ENG": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
       "SALT": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "APPC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547",
-      "RDN": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
+      "APPC": "0x1ae659f93ba2fc0a1f379545cf9335adb75fa547"
     }
   },
   "permission": {
