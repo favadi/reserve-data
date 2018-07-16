@@ -83,7 +83,7 @@ func (self *BoltStatStorage) SetLastProcessedTradeLogTimepoint(statType string, 
 	err = self.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(tradeLogProcessorState))
 		if b == nil {
-			return (errors.New("Cannot find last processed bucket"))
+			return errors.New("Cannot find last processed bucket")
 		}
 		err = b.Put([]byte(statType), boltutil.Uint64ToBytes(timepoint))
 		return err
@@ -97,7 +97,7 @@ func (self *BoltStatStorage) GetLastProcessedTradeLogTimepoint(statType string) 
 	err = self.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(tradeLogProcessorState))
 		if b == nil {
-			return (errors.New("Cannot find last processed bucket"))
+			return errors.New("Cannot find last processed bucket")
 		}
 		result = boltutil.BytesToUint64(b.Get([]byte(statType)))
 		return nil
@@ -170,8 +170,7 @@ func (self *BoltStatStorage) GetWalletAddresses() ([]string, error) {
 	err = self.db.View(func(tx *bolt.Tx) error {
 		walletBucket := tx.Bucket([]byte(walletAddressBucket))
 		if walletBucket == nil {
-			log.Printf("GetWalletAddresses cannot get bucket %s", walletAddressBucket)
-			return nil
+			return fmt.Errorf("GetWalletAddresses cannot get bucket %s", walletAddressBucket)
 		}
 		c := walletBucket.Cursor()
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
@@ -235,7 +234,7 @@ func (self *BoltStatStorage) SetVolumeStat(volumeStats map[string]common.VolumeS
 	err := self.db.Update(func(tx *bolt.Tx) error {
 		for asset, freqData := range volumeStats {
 			asset = strings.ToLower(asset)
-			// There should be a volume bucket and Nested these asset bucket inside
+			// TODO: There should be a volume bucket and Nested these asset bucket inside
 			volumeBk, uErr := tx.CreateBucketIfNotExists([]byte(asset))
 			if uErr != nil {
 				return uErr
