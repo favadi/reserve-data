@@ -13,7 +13,11 @@ COPY ./common/blockchain/ERC20.abi /go/src/github.com/KyberNetwork/reserve-data/
 COPY ./blockchain/*.abi /go/src/github.com/KyberNetwork/reserve-data/blockchain/
 COPY ./stat/util/GeoLite2-Country.mmdb /go/src/github.com/KyberNetwork/reserve-data/stat/util/GeoLite2-Country.mmdb
 
-WORKDIR /go/src/github.com/KyberNetwork/reserve-data
+RUN apt-get update && \
+    apt install -y ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /go/src/github.com/KyberNetwork/reserve-data/cmd
 EXPOSE 8000
 
 ENTRYPOINT ["/bin/cmd"]
