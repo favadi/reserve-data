@@ -21,4 +21,4 @@ WORKDIR /go/src/github.com/KyberNetwork/reserve-data/cmd
 EXPOSE 8000
 
 ENTRYPOINT ["/bin/cmd"]
-CMD ["server"]
+CMD ["server", "--log-to-stdout"]
