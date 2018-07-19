@@ -7,6 +7,7 @@ RUN go install -v github.com/KyberNetwork/reserve-data/cmd
 # final stage
 FROM debian:stretch
 ENV KYBER_EXCHANGES huobi,bittrex,binance
+VOLUME /go/src/github.com/KyberNetwork/reserve-data/cmd/
 COPY --from=build-env /go/bin/cmd /bin
 COPY ./cmd/dev_setting.json ./cmd/fee.json ./cmd/kovan_setting.json ./cmd/mainnet_setting.json ./cmd/min_deposit.json ./cmd/ropsten_setting.json ./cmd/staging_setting.json ./cmd/deposit_keystore ./cmd/keystore ./cmd/intermediate_account_keystore /go/src/github.com/KyberNetwork/reserve-data/cmd/
 COPY ./common/blockchain/ERC20.abi /go/src/github.com/KyberNetwork/reserve-data/common/blockchain/ERC20.abi
