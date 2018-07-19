@@ -341,6 +341,65 @@ func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.In
 	return big.NewInt(int64(nonce)), big.NewInt(int64(gasPrice)), count, nil
 }
 
+func (self ReserveCore) GetSetRateResult(tokens []common.Token,
+	buys []*big.Int,
+	sells []*big.Int,
+	block *big.Int,
+	afpMids []*big.Int) (error, *types.Transaction) {
+	var (
+		tx  *types.Transaction
+		err error
+	)
+	if len(tokens) != len(buys) || len(tokens) != len(sells) || len(tokens) != len(afpMids) {
+		return errors.New("Tokens, buys sells and afpMids must have the same length"), tx
+	}
+
+	if err = sanityCheck(buys, afpMids, sells); err != nil {
+		return err, tx
+	}
+	tokenAddrs := []ethereum.Address{}
+	for _, token := range tokens {
+		tokenAddrs = append(tokenAddrs, ethereum.HexToAddress(token.Address))
+	}
+	// if there is a pending set rate tx, we replace it
+	var oldNonce *big.Int
+	var oldPrice *big.Int
+	var minedNonce uint64
+	var count uint64
+	minedNonce, err = self.blockchain.SetRateMinedNonce()
+	if err != nil {
+		return fmt.Errorf("Couldn't get mined nonce of set rate operator (%s)", err.Error()), tx
+	}
+	oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
+	log.Printf("old nonce: %v, old price: %v, count: %d, err: %s", oldNonce, oldPrice, count, common.ErrorToString(err))
+	if err != nil {
+		return fmt.Errorf("Couldn't check pending set rate tx pool (%s). Please try later", err.Error()), tx
+	}
+	if oldNonce != nil {
+		newPrice := calculateNewGasPrice(oldPrice, count)
+		log.Printf("Trying to replace old tx with new price: %s", newPrice.Text(10))
+		tx, err = self.blockchain.SetRates(
+			tokenAddrs, buys, sells, block,
+			oldNonce,
+			newPrice,
+		)
+	} else {
+		recommendedPrice := self.blockchain.StandardGasPrice()
+		var initPrice *big.Int
+		if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
+			initPrice = common.GweiToWei(10)
+		} else {
+			initPrice = common.GweiToWei(recommendedPrice)
+		}
+		tx, err = self.blockchain.SetRates(
+			tokenAddrs, buys, sells, block,
+			big.NewInt(int64(minedNonce)),
+			initPrice,
+		)
+	}
+	return err, tx
+}
+
 func (self ReserveCore) SetRates(
 	tokens []common.Token,
 	buys []*big.Int,
@@ -349,67 +408,16 @@ func (self ReserveCore) SetRates(
 	afpMids []*big.Int,
 	additionalMsgs []string) (common.ActivityID, error) {
 
-	lentokens := len(tokens)
-	lenbuys := len(buys)
-	lensells := len(sells)
-	lenafps := len(afpMids)
+	var (
+		tx      *types.Transaction
+		txhex   string = ethereum.Hash{}.Hex()
+		txnonce string = "0"
+		txprice string = "0"
+		err     error
+		status  string
+	)
 
-	var tx *types.Transaction
-	var txhex string = ethereum.Hash{}.Hex()
-	var txnonce string = "0"
-	var txprice string = "0"
-	var err error
-	var status string
-
-	if lentokens != lenbuys || lentokens != lensells || lentokens != lenafps {
-		err = errors.New("Tokens, buys sells and afpMids must have the same length")
-	} else {
-		err = sanityCheck(buys, afpMids, sells)
-		if err == nil {
-			tokenAddrs := []ethereum.Address{}
-			for _, token := range tokens {
-				tokenAddrs = append(tokenAddrs, ethereum.HexToAddress(token.Address))
-			}
-			// if there is a pending set rate tx, we replace it
-			var oldNonce *big.Int
-			var oldPrice *big.Int
-			var minedNonce uint64
-			var count uint64
-			minedNonce, err = self.blockchain.SetRateMinedNonce()
-			if err != nil {
-				err = errors.New("Couldn't get mined nonce of set rate operator")
-			} else {
-				oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
-				log.Printf("old nonce: %v, old price: %v, count: %d, err: %s", oldNonce, oldPrice, count, common.ErrorToString(err))
-				if err != nil {
-					err = errors.New("Couldn't check pending set rate tx pool. Please try later")
-				} else {
-					if oldNonce != nil {
-						newPrice := calculateNewGasPrice(oldPrice, count)
-						log.Printf("Trying to replace old tx with new price: %s", newPrice.Text(10))
-						tx, err = self.blockchain.SetRates(
-							tokenAddrs, buys, sells, block,
-							oldNonce,
-							newPrice,
-						)
-					} else {
-						recommendedPrice := self.blockchain.StandardGasPrice()
-						var initPrice *big.Int
-						if recommendedPrice == 0 || recommendedPrice > highBoundGasPrice {
-							initPrice = common.GweiToWei(10)
-						} else {
-							initPrice = common.GweiToWei(recommendedPrice)
-						}
-						tx, err = self.blockchain.SetRates(
-							tokenAddrs, buys, sells, block,
-							big.NewInt(int64(minedNonce)),
-							initPrice,
-						)
-					}
-				}
-			}
-		}
-	}
+	err, tx = self.GetSetRateResult(tokens, buys, sells, block, afpMids)
 	if err != nil {
 		status = "failed"
 	} else {
