@@ -7,6 +7,7 @@
 ### Bug fixes:
 
 ### Improvements:
+- refactor bolt storage implementation for stat (#357)
 
 ### Compatibility
 
