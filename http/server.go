@@ -1282,8 +1282,8 @@ func (self *HTTPServer) GetWalletStats(c *gin.Context) {
 	httputil.ResponseSuccess(c, httputil.WithData(data))
 }
 
-func (self *HTTPServer) GetWalletAddress(c *gin.Context) {
-	data, err := self.stat.GetWalletAddress()
+func (self *HTTPServer) GetWalletAddresses(c *gin.Context) {
+	data, err := self.stat.GetWalletAddresses()
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1816,7 +1816,7 @@ func (self *HTTPServer) register() {
 		self.r.GET("/get-pending-addresses", self.GetPendingAddresses)
 		self.r.GET("/get-reserve-rate", self.GetReserveRate)
 		self.r.GET("/get-wallet-stats", self.GetWalletStats)
-		self.r.GET("/get-wallet-address", self.GetWalletAddress)
+		self.r.GET("/get-wallet-address", self.GetWalletAddresses)
 		self.r.GET("/get-country-stats", self.GetCountryStats)
 		self.r.GET("/get-heat-map", self.GetHeatMap)
 		self.r.GET("/get-countries", self.GetCountries)
