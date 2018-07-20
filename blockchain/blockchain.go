@@ -5,10 +5,13 @@ import (
 	"log"
 	"math/big"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
+	hbblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
+	"github.com/KyberNetwork/reserve-data/settings"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethereum "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -57,23 +60,15 @@ func newTBIndex(bulkIndex, indexInBulk uint64) tbindex {
 
 type Blockchain struct {
 	*blockchain.BaseBlockchain
-	wrapper       *blockchain.Contract
-	pricing       *blockchain.Contract
-	reserve       *blockchain.Contract
-	rm            ethereum.Address
-	wrapperAddr   ethereum.Address
-	pricingAddr   ethereum.Address
-	burnerAddr    ethereum.Address
-	networkAddr   ethereum.Address
-	internalAddr  ethereum.Address
-	whitelistAddr ethereum.Address
-	oldNetworks   []ethereum.Address
-	oldBurners    []ethereum.Address
-	tokens        []common.Token
-	tokenIndices  map[string]tbindex
+	wrapper      *blockchain.Contract
+	pricing      *blockchain.Contract
+	reserve      *blockchain.Contract
+	tokenIndices map[string]tbindex
+	mu           sync.RWMutex
 
 	localSetRateNonce     uint64
 	setRateNonceTimestamp uint64
+	setting               Setting
 }
 
 func (self *Blockchain) StandardGasPrice() float64 {
@@ -86,68 +81,109 @@ func (self *Blockchain) StandardGasPrice() float64 {
 	return common.BigToFloat(price, 9)
 }
 
-func (self *Blockchain) AddOldNetwork(addr ethereum.Address) {
-	self.oldNetworks = append(self.oldNetworks, addr)
+func (self *Blockchain) AddOldNetwork(addr ethereum.Address) error {
+	return self.setting.AddAddressToSet(settings.OldNetWorks, addr)
 }
 
-func (self *Blockchain) AddOldBurners(addr ethereum.Address) {
-	self.oldBurners = append(self.oldBurners, addr)
+func (self *Blockchain) AddOldBurners(addr ethereum.Address) error {
+	return self.setting.AddAddressToSet(settings.OldBurners, addr)
 }
 
-func (self *Blockchain) AddToken(t common.Token) {
-	self.tokens = append(self.tokens, t)
-}
-
-func (self *Blockchain) GetAddresses() *common.Addresses {
+func (self *Blockchain) GetAddresses() (*common.Addresses, error) {
 	exs := map[common.ExchangeID]common.TokenAddresses{}
 	for _, ex := range common.SupportedExchanges {
-		exs[ex.ID()] = ex.TokenAddresses()
+		addrs, err := ex.TokenAddresses()
+		if err != nil {
+			return nil, fmt.Errorf("ERROR: Can't not get deposit addresss of exchange %s :(%s)", ex.ID(), err.Error())
+		}
+		exs[ex.ID()] = addrs
+
 	}
 	tokens := map[string]common.TokenInfo{}
-	for _, t := range self.tokens {
+	tokenSettings, err := self.setting.GetInternalTokens()
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range tokenSettings {
 		tokens[t.ID] = common.TokenInfo{
 			Address:  ethereum.HexToAddress(t.Address),
-			Decimals: t.Decimal,
+			Decimals: t.Decimals,
 		}
+	}
+	wrapperAddr, err := self.setting.GetAddress(settings.Wrapper)
+	if err != nil {
+		return nil, err
+	}
+	pricingAddr, err := self.setting.GetAddress(settings.Pricing)
+	if err != nil {
+		return nil, err
+	}
+	reserveAddr, err := self.setting.GetAddress(settings.Reserve)
+	if err != nil {
+		return nil, err
+	}
+	burnerAddr, err := self.setting.GetAddress(settings.Burner)
+	if err != nil {
+		return nil, err
+	}
+	networkAddr, err := self.setting.GetAddress(settings.Network)
+	if err != nil {
+		return nil, err
 	}
 	opAddrs := self.OperatorAddresses()
-	return &common.Addresses{
-		Tokens:           tokens,
-		Exchanges:        exs,
-		WrapperAddress:   self.wrapperAddr,
-		PricingAddress:   self.pricingAddr,
-		ReserveAddress:   self.rm,
-		FeeBurnerAddress: self.burnerAddr,
-		NetworkAddress:   self.networkAddr,
-		PricingOperator:  opAddrs[pricingOP],
-		DepositOperator:  opAddrs[depositOP],
-	}
+	return common.NewAddresses(
+		tokens,
+		exs,
+		wrapperAddr,
+		pricingAddr,
+		reserveAddr,
+		burnerAddr,
+		networkAddr,
+		opAddrs[pricingOP],
+		opAddrs[depositOP],
+		opAddrs[hbblockchain.HuobiOP],
+	), nil
 }
 
-func (self *Blockchain) LoadAndSetTokenIndices() error {
-	tokens := []ethereum.Address{}
-	self.tokenIndices = map[string]tbindex{}
-
-	log.Printf("tokens: %v", self.tokens)
-	for _, tok := range self.tokens {
-		if tok.ID != "ETH" {
-			tokens = append(tokens, ethereum.HexToAddress(tok.Address))
-		} else {
-			// this is not really needed. Just a safe guard. Use a very big indices so it is does not exist.
-			self.tokenIndices[ethereum.HexToAddress(tok.Address).Hex()] = newTBIndex(1000000, 1000000)
-		}
-	}
+func (self *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
 	opts := self.GetCallOpts(0)
-	log.Printf("tokens: %v", tokens)
-	bulkIndices, indicesInBulk, err := self.GeneratedGetTokenIndicies(
+	pricingAddr, err := self.setting.GetAddress(settings.Pricing)
+	if err != nil {
+		return err
+	}
+	tokenAddrs := []ethereum.Address{}
+	tokenAddrs = append(tokenAddrs, tokenAddr)
+	_, _, err = self.GeneratedGetTokenIndicies(
 		opts,
-		self.pricingAddr,
-		tokens,
+		pricingAddr,
+		tokenAddrs,
 	)
 	if err != nil {
 		return err
 	}
-	for i, tok := range tokens {
+	return nil
+}
+
+func (self *Blockchain) LoadAndSetTokenIndices(tokenAddrs []ethereum.Address) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.tokenIndices = map[string]tbindex{}
+	// this is not really needed. Just a safe guard. Use a very big indices so it would not exist.
+	self.tokenIndices[ethereum.HexToAddress(self.setting.ETHToken().Address).Hex()] = tbindex{1000000, 1000000}
+	opts := self.GetCallOpts(0)
+	pricingAddr, err := self.setting.GetAddress(settings.Pricing)
+	if err != nil {
+		return err
+	}
+	bulkIndices, indicesInBulk, err := self.GeneratedGetTokenIndicies(
+		opts,
+		pricingAddr,
+		tokenAddrs,
+	)
+	if err != nil {
+		return err
+	}
+	for i, tok := range tokenAddrs {
 		self.tokenIndices[tok.Hex()] = newTBIndex(
 			bulkIndices[i].Uint64(),
 			indicesInBulk[i].Uint64(),
@@ -188,11 +224,14 @@ func (self *Blockchain) SetRates(
 	block *big.Int,
 	nonce *big.Int,
 	gasPrice *big.Int) (*types.Transaction, error) {
-
+	pricingAddr, err := self.setting.GetAddress(settings.Pricing)
+	if err != nil {
+		return nil, err
+	}
 	block.Add(block, big.NewInt(1))
 	copts := self.GetCallOpts(0)
 	baseBuys, baseSells, _, _, _, err := self.GeneratedGetTokenRates(
-		copts, self.pricingAddr, tokens,
+		copts, pricingAddr, tokens,
 	)
 	if err != nil {
 		return nil, err
@@ -326,7 +365,11 @@ func (self *Blockchain) SetQtyStepFunction(token ethereum.Address, xBuy []*big.I
 func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint64) (map[string]common.BalanceEntry, error) {
 	result := map[string]common.BalanceEntry{}
 	tokens := []ethereum.Address{}
-	for _, tok := range self.tokens {
+	tokensSetting, err := self.setting.GetInternalTokens()
+	if err != nil {
+		return result, err
+	}
+	for _, tok := range tokensSetting {
 		tokens = append(tokens, ethereum.HexToAddress(tok.Address))
 	}
 	timestamp := common.GetTimestamp()
@@ -335,7 +378,7 @@ func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint6
 	returnTime := common.GetTimestamp()
 	log.Printf("Fetcher ------> balances: %v, err: %s", balances, common.ErrorToString(err))
 	if err != nil {
-		for _, token := range common.InternalTokens() {
+		for _, token := range tokensSetting {
 			result[token.ID] = common.BalanceEntry{
 				Valid:      false,
 				Error:      err.Error(),
@@ -344,7 +387,7 @@ func (self *Blockchain) FetchBalanceData(reserve ethereum.Address, atBlock uint6
 			}
 		}
 	} else {
-		for i, tok := range self.tokens {
+		for i, tok := range tokensSetting {
 			if balances[i].Cmp(Big0) == 0 || balances[i].Cmp(BigMax) > 0 {
 				log.Printf("Fetcher ------> balances of token %s is invalid", tok.ID)
 				result[tok.ID] = common.BalanceEntry{
@@ -371,7 +414,11 @@ func (self *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.
 	result := common.AllRateEntry{}
 	tokenAddrs := []ethereum.Address{}
 	validTokens := []common.Token{}
-	for _, s := range self.tokens {
+	tokenSettings, err := self.setting.GetInternalTokens()
+	if err != nil {
+		return result, err
+	}
+	for _, s := range tokenSettings {
 		if s.ID != "ETH" {
 			tokenAddrs = append(tokenAddrs, ethereum.HexToAddress(s.Address))
 			validTokens = append(validTokens, s)
@@ -379,8 +426,12 @@ func (self *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.
 	}
 	timestamp := common.GetTimestamp()
 	opts := self.GetCallOpts(atBlock)
+	pricingAddr, err := self.setting.GetAddress(settings.Pricing)
+	if err != nil {
+		return result, err
+	}
 	baseBuys, baseSells, compactBuys, compactSells, blocks, err := self.GeneratedGetTokenRates(
-		opts, self.pricingAddr, tokenAddrs,
+		opts, pricingAddr, tokenAddrs,
 	)
 	if err != nil {
 		return result, err
@@ -401,7 +452,6 @@ func (self *Blockchain) FetchRates(atBlock uint64, currentBlock uint64) (common.
 		)
 	}
 	return result, nil
-
 }
 
 func (self *Blockchain) GetReserveRates(
@@ -411,7 +461,7 @@ func (self *Blockchain) GetReserveRates(
 	rates := common.ReserveRates{}
 	rates.Timestamp = common.GetTimepoint()
 
-	ETH := common.ETHToken()
+	ETH := self.setting.ETHToken()
 	srcAddresses := []ethereum.Address{}
 	destAddresses := []ethereum.Address{}
 	for _, token := range tokens {
@@ -455,11 +505,32 @@ func (self *Blockchain) GetRawLogs(fromBlock uint64, toBlock uint64) ([]types.Lo
 		to        = big.NewInt(int64(toBlock))
 		addresses []ethereum.Address
 	)
+	// we have to track events from network and fee burner contracts
+	// including their old contracts
+	networkAddr, err := self.setting.GetAddress(settings.Network)
+	if err != nil {
+		return nil, err
+	}
+	burnerAddr, err := self.setting.GetAddress(settings.Burner)
+	if err != nil {
+		return nil, err
+	}
+	whitelistAddr, err := self.setting.GetAddress(settings.Whitelist)
+	if err != nil {
+		return nil, err
+	}
 
-	addresses = append(addresses, self.networkAddr, self.internalAddr, self.burnerAddr, self.whitelistAddr)
-	addresses = append(addresses, self.oldNetworks...)
-	addresses = append(addresses, self.oldBurners...)
-
+	addresses = append(addresses, networkAddr, burnerAddr, whitelistAddr)
+	oldNetworks, err := self.setting.GetAddresses(settings.OldNetWorks)
+	if err != nil {
+		log.Printf("WARNING: can't get old network addresses (%s)", err)
+	}
+	oldBurners, err := self.setting.GetAddresses(settings.OldBurners)
+	if err != nil {
+		log.Printf("WARNING: can't get old burners addresses (%s)", err)
+	}
+	addresses = append(addresses, oldNetworks...)
+	addresses = append(addresses, oldBurners...)
 	param := common.NewFilterQuery(
 		from,
 		to,
@@ -485,6 +556,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 		err      error
 		result   []common.KNLog
 		noCatLog = 0
+		eth      = self.setting.ETHToken()
 	)
 
 	// get all logs from fromBlock to best block
@@ -542,7 +614,7 @@ func (self *Blockchain) GetLogs(fromBlock uint64, toBlock uint64) ([]common.KNLo
 
 		ethRate := self.GetEthRate(tradeLog.Timestamp / 1000000)
 		if ethRate != 0 {
-			result[i] = calculateFiatAmount(tradeLog, ethRate)
+			result[i] = calculateFiatAmount(tradeLog, ethRate, eth)
 		}
 	}
 
@@ -596,28 +668,48 @@ func (self *Blockchain) GetPricingMethod(inputData string) (*abi.Method, error) 
 	return method, nil
 }
 
-func NewBlockchain(
-	base *blockchain.BaseBlockchain,
-	wrapperAddr, pricingAddr, burnerAddr,
-	networkAddr, internalAddr, reserveAddr, whitelistAddr ethereum.Address) (*Blockchain, error) {
+func NewBlockchain(base *blockchain.BaseBlockchain, setting Setting) (*Blockchain, error) {
+	wrapperAddr, err := setting.GetAddress(settings.Wrapper)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("wrapper address: %s", wrapperAddr.Hex())
 	wrapper := blockchain.NewContract(
 		wrapperAddr,
 		filepath.Join(common.CurrentDir(), "wrapper.abi"),
 	)
+	reserveAddr, err := setting.GetAddress(settings.Reserve)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("reserve address: %s", reserveAddr.Hex())
 	reserve := blockchain.NewContract(
 		reserveAddr,
 		filepath.Join(common.CurrentDir(), "reserve.abi"),
 	)
+	pricingAddr, err := setting.GetAddress(settings.Pricing)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("pricing address: %s", pricingAddr.Hex())
 	pricing := blockchain.NewContract(
 		pricingAddr,
 		filepath.Join(common.CurrentDir(), "pricing.abi"),
 	)
-
+	burnerAddr, err := setting.GetAddress(settings.Burner)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("burner address: %s", burnerAddr.Hex())
+	networkAddr, err := setting.GetAddress(settings.Network)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("network address: %s", networkAddr.Hex())
+	whitelistAddr, err := setting.GetAddress(settings.Whitelist)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("whitelist address: %s", whitelistAddr.Hex())
 
 	return &Blockchain{
@@ -626,18 +718,9 @@ func NewBlockchain(
 		// 	client, etherCli, operators, blockchain.NewBroadcaster(clients),
 		// 	ethUSDRate, chainType,
 		// ),
-		wrapper:       wrapper,
-		pricing:       pricing,
-		reserve:       reserve,
-		rm:            reserveAddr,
-		wrapperAddr:   wrapperAddr,
-		pricingAddr:   pricingAddr,
-		burnerAddr:    burnerAddr,
-		networkAddr:   networkAddr,
-		internalAddr:  internalAddr,
-		whitelistAddr: whitelistAddr,
-		oldNetworks:   []ethereum.Address{},
-		oldBurners:    []ethereum.Address{},
-		tokens:        []common.Token{},
+		wrapper: wrapper,
+		pricing: pricing,
+		reserve: reserve,
+		setting: setting,
 	}, nil
 }

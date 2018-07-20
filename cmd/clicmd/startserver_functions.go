@@ -124,13 +124,7 @@ func GetConfigFromENV(kyberENV string) *configuration.Config {
 func CreateBlockchain(config *configuration.Config, kyberENV string) (bc *blockchain.Blockchain, err error) {
 	bc, err = blockchain.NewBlockchain(
 		config.Blockchain,
-		config.WrapperAddress,
-		config.PricingAddress,
-		config.FeeBurnerAddress,
-		config.NetworkAddress,
-		config.InternalNetwork,
-		config.ReserveAddress,
-		config.WhitelistAddress,
+		config.Setting,
 	)
 	if err != nil {
 		panic(err)
@@ -139,20 +133,30 @@ func CreateBlockchain(config *configuration.Config, kyberENV string) (bc *blockc
 	// old contract addresses are used for events fetcher
 	switch kyberENV {
 	case common.ProductionMode, common.MainnetMode, common.DevMode:
-		bc.AddOldBurners(ethereum.HexToAddress("0x4E89bc8484B2c454f2F7B25b612b648c45e14A8e"))
+		if uErr := bc.AddOldBurners(ethereum.HexToAddress("0x4E89bc8484B2c454f2F7B25b612b648c45e14A8e")); uErr != nil {
+			log.Panic("ERROR: cannot add old burner")
+		}
 		// contract v1
-		bc.AddOldNetwork(ethereum.HexToAddress("0x964F35fAe36d75B1e72770e244F6595B68508CF5"))
-		bc.AddOldBurners(ethereum.HexToAddress("0x07f6e905f2a1559cd9fd43cb92f8a1062a3ca706"))
+		if uErr := bc.AddOldNetwork(ethereum.HexToAddress("0x964F35fAe36d75B1e72770e244F6595B68508CF5")); uErr != nil {
+			log.Panic("ERROR: cannot add old burner")
+		}
+		if uErr := bc.AddOldBurners(ethereum.HexToAddress("0x07f6e905f2a1559cd9fd43cb92f8a1062a3ca706")); uErr != nil {
+			log.Panic("ERROR: cannot add old burner")
+		}
 	case common.StagingMode:
 		// contract v1
-		bc.AddOldNetwork(ethereum.HexToAddress("0xD2D21FdeF0D054D2864ce328cc56D1238d6b239e"))
-		bc.AddOldBurners(ethereum.HexToAddress("0xB2cB365D803Ad914e63EA49c95eC663715c2F673"))
+		if uErr := bc.AddOldNetwork(ethereum.HexToAddress("0xD2D21FdeF0D054D2864ce328cc56D1238d6b239e")); uErr != nil {
+			log.Panic("ERROR: cannot add old burner")
+		}
+		if uErr := bc.AddOldBurners(ethereum.HexToAddress("0xB2cB365D803Ad914e63EA49c95eC663715c2F673")); uErr != nil {
+			log.Panic("ERROR: cannot add old burner")
+		}
 	}
-
-	for _, token := range config.SupportedTokens {
-		bc.AddToken(token)
+	tokens, err := config.Setting.GetInternalTokens()
+	if err != nil {
+		log.Panicf("Can't get the list of Internal Tokens for indices: %s", err)
 	}
-	err = bc.LoadAndSetTokenIndices()
+	err = bc.LoadAndSetTokenIndices(common.GetTokenAddressesList(tokens))
 	if err != nil {
 		log.Panicf("Can't load and set token indices: %s", err)
 	}
@@ -166,8 +170,8 @@ func CreateDataCore(config *configuration.Config, kyberENV string, bc *blockchai
 		config.FetcherGlobalStorage,
 		config.World,
 		config.FetcherRunner,
-		config.ReserveAddress,
 		kyberENV == common.SimulationMode,
+		config.Setting,
 	)
 	for _, ex := range config.FetcherExchanges {
 		dataFetcher.AddExchange(ex)
@@ -184,9 +188,10 @@ func CreateDataCore(config *configuration.Config, kyberENV string, bc *blockchai
 		config.Archive,
 		config.DataGlobalStorage,
 		config.Exchanges,
+		config.Setting,
 	)
 
-	rCore := core.NewReserveCore(bc, config.ActivityStorage, config.ReserveAddress)
+	rCore := core.NewReserveCore(bc, config.ActivityStorage, config.Setting)
 	return rData, rCore
 }
 
@@ -208,11 +213,9 @@ func CreateStat(config *configuration.Config, kyberENV string, bc *blockchain.Bl
 		config.FeeSetRateStorage,
 		config.StatFetcherRunner,
 		deployBlock,
-		config.ReserveAddress,
-		config.PricingAddress,
 		deployBlock,
 		config.EtherscanApiKey,
-		config.ThirdPartyReserves,
+		config.Setting,
 	)
 	statFetcher.SetBlockchain(bc)
 	rStat := stat.NewReserveStats(

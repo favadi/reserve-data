@@ -1,52 +1,12 @@
 package common
 
 import (
-	"encoding/json"
-	"io/ioutil"
-
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
-
-type token struct {
-	Address          string `json:"address"`
-	Name             string `json:"name"`
-	Decimals         int64  `json:"decimals"`
-	KNReserveSupport bool   `json:"internal use"`
-	Active           bool   `json:"listed"`
-}
-
-type exchange map[string]string
 
 type TokenInfo struct {
 	Address  ethereum.Address `json:"address"`
 	Decimals int64            `json:"decimals"`
-}
-
-type AddressConfig struct {
-	Tokens             map[string]token    `json:"tokens"`
-	Exchanges          map[string]exchange `json:"exchanges"`
-	Bank               string              `json:"bank"`
-	Reserve            string              `json:"reserve"`
-	Network            string              `json:"network"`
-	InternalNetwork    string              `json:"internal network"`
-	Wrapper            string              `json:"wrapper"`
-	Pricing            string              `json:"pricing"`
-	FeeBurner          string              `json:"feeburner"`
-	Whitelist          string              `json:"whitelist"`
-	ThirdPartyReserves []string            `json:"third_party_reserves"`
-	Intermediator      string              `json:"intermediator"`
-	SetRate            string              `json:"setrate"`
-}
-
-func GetAddressConfigFromFile(path string) (AddressConfig, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return AddressConfig{}, err
-	} else {
-		result := AddressConfig{}
-		err := json.Unmarshal(data, &result)
-		return result, err
-	}
 }
 
 type Addresses struct {
@@ -60,6 +20,32 @@ type Addresses struct {
 	PricingOperator      ethereum.Address              `json:"pricing_operator"`
 	DepositOperator      ethereum.Address              `json:"deposit_opeartor"`
 	IntermediateOperator ethereum.Address              `json:"intermediate_operator"`
+}
+
+func NewAddresses(
+	Tokens map[string]TokenInfo,
+	Exchanges map[ExchangeID]TokenAddresses,
+	WrapperAddress ethereum.Address,
+	PricingAddress ethereum.Address,
+	ReserveAddress ethereum.Address,
+	FeeBurnerAddress ethereum.Address,
+	NetworkAddress ethereum.Address,
+	PricingOperator ethereum.Address,
+	DepositOperator ethereum.Address,
+	IntermediateOperator ethereum.Address,
+) *Addresses {
+	return &Addresses{
+		Tokens,
+		Exchanges,
+		WrapperAddress,
+		PricingAddress,
+		ReserveAddress,
+		FeeBurnerAddress,
+		NetworkAddress,
+		PricingOperator,
+		DepositOperator,
+		IntermediateOperator,
+	}
 }
 
 type TokenAddresses map[string]ethereum.Address

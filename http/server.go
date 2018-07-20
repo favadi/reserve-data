@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/KyberNetwork/reserve-data"
+	"github.com/KyberNetwork/reserve-data/blockchain"
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
 	"github.com/KyberNetwork/reserve-data/metric"
@@ -44,6 +45,8 @@ type HTTPServer struct {
 	authEnabled bool
 	auth        Authentication
 	r           *gin.Engine
+	blockchain  *blockchain.Blockchain
+	setting     Setting
 }
 
 func getTimePoint(c *gin.Context, useDefault bool) uint64 {
@@ -169,7 +172,7 @@ func (self *HTTPServer) Price(c *gin.Context) {
 	base := c.Param("base")
 	quote := c.Param("quote")
 	log.Printf("Getting price for %s - %s \n", base, quote)
-	pair, err := common.NewTokenPair(base, quote)
+	pair, err := self.setting.NewTokenPairFromID(base, quote)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithReason("Token pair is not supported"))
 	} else {
@@ -262,7 +265,7 @@ func (self *HTTPServer) SetRate(c *gin.Context) {
 	msgs := strings.Split(postForm.Get("msgs"), "-")
 	tokens := []common.Token{}
 	for _, tok := range strings.Split(tokenAddrs, "-") {
-		token, err := common.GetInternalToken(tok)
+		token, err := self.setting.GetInternalTokenByID(tok)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
@@ -327,12 +330,12 @@ func (self *HTTPServer) Trade(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	base, err := common.GetInternalToken(baseTokenParam)
+	base, err := self.setting.GetInternalTokenByID(baseTokenParam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	quote, err := common.GetInternalToken(quoteTokenParam)
+	quote, err := self.setting.GetInternalTokenByID(quoteTokenParam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -409,7 +412,7 @@ func (self *HTTPServer) Withdraw(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	token, err := common.GetInternalToken(tokenParam)
+	token, err := self.setting.GetInternalTokenByID(tokenParam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -443,7 +446,7 @@ func (self *HTTPServer) Deposit(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	token, err := common.GetInternalToken(tokenParam)
+	token, err := self.setting.GetInternalTokenByID(tokenParam)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -545,7 +548,7 @@ func (self *HTTPServer) ImmediatePendingActivities(c *gin.Context) {
 }
 
 func (self *HTTPServer) Metrics(c *gin.Context) {
-	response := metric.MetricResponse{
+	response := common.MetricResponse{
 		Timestamp: common.GetTimepoint(),
 	}
 	log.Printf("Getting metrics")
@@ -558,7 +561,7 @@ func (self *HTTPServer) Metrics(c *gin.Context) {
 	toParam := postForm.Get("to")
 	tokens := []common.Token{}
 	for _, tok := range strings.Split(tokenParam, "-") {
-		token, err := common.GetInternalToken(tok)
+		token, err := self.setting.GetInternalTokenByID(tok)
 		if err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
@@ -599,9 +602,9 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 	}
-	metricEntry := metric.MetricEntry{}
+	metricEntry := common.MetricEntry{}
 	metricEntry.Timestamp = timestamp
-	metricEntry.Data = map[string]metric.TokenMetric{}
+	metricEntry.Data = map[string]common.TokenMetric{}
 	// data must be in form of <token>_afpmid_spread|<token>_afpmid_spread|...
 	for _, tokenData := range strings.Split(dataParam, "|") {
 		var (
@@ -627,7 +630,7 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 			httputil.ResponseFailure(c, httputil.WithReason("Spread "+spreadStr+" is not float64"))
 			return
 		}
-		metricEntry.Data[token] = metric.TokenMetric{
+		metricEntry.Data[token] = common.TokenMetric{
 			AfpMid: afpmid,
 			Spread: spread,
 		}
@@ -642,28 +645,29 @@ func (self *HTTPServer) StoreMetrics(c *gin.Context) {
 }
 
 //ValidateExchangeInfo validate if data is complete exchange info with all token pairs supported
-func ValidateExchangeInfo(exchange common.Exchange, data map[common.TokenPairID]common.ExchangePrecisionLimit) error {
-	pairs := exchange.Pairs()
-	for _, pair := range pairs {
-		// stable exchange is a simulated exchange which is not a real exchange
-		// we do not do rebalance on stable exchange then it also does not need to have exchange info (and it actully does not have one)
-		// therefore we skip checking it for supported tokens
-		if exchange.ID() == common.ExchangeID("stable_exchange") {
-			continue
-		}
-		if _, exist := data[pair.PairID()]; !exist {
-			return fmt.Errorf("exchange info of %s lack of token %s", exchange.ID(), string(pair.PairID()))
-		}
-	}
-	return nil
-}
+// func ValidateExchangeInfo(exchange common.Exchange, data map[common.TokenPairID]common.ExchangePrecisionLimit) error {
+// 	exInfo, err :=self
+// 	pairs := exchange.Pairs()
+// 	for _, pair := range pairs {
+// 		// stable exchange is a simulated exchange which is not a real exchange
+// 		// we do not do rebalance on stable exchange then it also does not need to have exchange info (and it actully does not have one)
+// 		// therefore we skip checking it for supported tokens
+// 		if exchange.ID() == common.ExchangeID("stable_exchange") {
+// 			continue
+// 		}
+// 		if _, exist := data[pair.PairID()]; !exist {
+// 			return fmt.Errorf("exchange info of %s lack of token %s", exchange.ID(), string(pair.PairID()))
+// 		}
+// 	}
+// 	return nil
+// }
 
 //GetExchangeInfo return exchange info of one exchange if it is given exchangeID
 //otherwise return all exchanges info
 func (self *HTTPServer) GetExchangeInfo(c *gin.Context) {
 	exchangeParam := c.Query("exchangeid")
 	if exchangeParam == "" {
-		data := map[string]map[common.TokenPairID]common.ExchangePrecisionLimit{}
+		data := map[string]common.ExchangeInfo{}
 		for _, ex := range common.SupportedExchanges {
 			exchangeInfo, err := ex.GetInfo()
 			if err != nil {
@@ -671,10 +675,10 @@ func (self *HTTPServer) GetExchangeInfo(c *gin.Context) {
 				return
 			}
 			responseData := exchangeInfo.GetData()
-			if err := ValidateExchangeInfo(ex, responseData); err != nil {
-				httputil.ResponseFailure(c, httputil.WithError(err))
-				return
-			}
+			// if err := ValidateExchangeInfo(exchangeInfo, responseData); err != nil {
+			// 	httputil.ResponseFailure(c, httputil.WithError(err))
+			// 	return
+			// }
 			data[string(ex.ID())] = responseData
 		}
 		httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -702,7 +706,7 @@ func (self *HTTPServer) GetPairInfo(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	pair, err := common.NewTokenPair(base, quote)
+	pair, err := self.setting.NewTokenPairFromID(base, quote)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -723,7 +727,11 @@ func (self *HTTPServer) GetExchangeFee(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	fee := exchange.GetFee()
+	fee, err := exchange.GetFee()
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
 	httputil.ResponseSuccess(c, httputil.WithData(fee))
 	return
 }
@@ -731,7 +739,11 @@ func (self *HTTPServer) GetExchangeFee(c *gin.Context) {
 func (self *HTTPServer) GetFee(c *gin.Context) {
 	data := map[string]common.ExchangeFees{}
 	for _, exchange := range common.SupportedExchanges {
-		fee := exchange.GetFee()
+		fee, err := exchange.GetFee()
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
 		data[string(exchange.ID())] = fee
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -741,7 +753,11 @@ func (self *HTTPServer) GetFee(c *gin.Context) {
 func (self *HTTPServer) GetMinDeposit(c *gin.Context) {
 	data := map[string]common.ExchangesMinDeposit{}
 	for _, exchange := range common.SupportedExchanges {
-		minDeposit := exchange.GetMinDeposit()
+		minDeposit, err := exchange.GetMinDeposit()
+		if err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
 		data[string(exchange.ID())] = minDeposit
 	}
 	httputil.ResponseSuccess(c, httputil.WithData(data))
@@ -839,8 +855,7 @@ func (self *HTTPServer) SetTargetQty(c *gin.Context) {
 		// reserve, _ := strconv.ParseFloat(dataParts[2], 64)
 		// rebalanceThresold, _ := strconv.ParseFloat(dataParts[3], 64)
 		// transferThresold, _ := strconv.ParseFloat(dataParts[4], 64)
-		_, err = common.GetInternalToken(token)
-		if err != nil {
+		if _, err = self.setting.GetInternalTokenByID(token); err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
@@ -861,7 +876,12 @@ func (self *HTTPServer) SetTargetQty(c *gin.Context) {
 }
 
 func (self *HTTPServer) GetAddress(c *gin.Context) {
-	httputil.ResponseSuccess(c, httputil.WithData(self.core.GetAddresses()))
+	addresses, err := self.core.GetAddresses()
+	if err != nil {
+		httputil.ResponseFailure(c, httputil.WithError(err))
+		return
+	}
+	httputil.ResponseSuccess(c, httputil.WithData(addresses))
 	return
 }
 
@@ -1041,8 +1061,7 @@ func (self *HTTPServer) SetPWIEquation(c *gin.Context) {
 			return
 		}
 		token := dataParts[0]
-		_, err = common.GetInternalToken(token)
-		if err != nil {
+		if _, err = self.setting.GetInternalTokenByID(token); err != nil {
 			httputil.ResponseFailure(c, httputil.WithError(err))
 			return
 		}
@@ -1506,7 +1525,7 @@ func (self *HTTPServer) GetReserveVolume(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason("token is required"))
 		return
 	}
-	token, err := common.GetNetworkToken(tokenName)
+	token, err := self.setting.GetActiveTokenByID(tokenName)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
@@ -1627,15 +1646,19 @@ func (self *HTTPServer) SetTargetQtyV2(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
-	var tokenTargetQty metric.TokenTargetQtyV2
+	var tokenTargetQty common.TokenTargetQtyV2
 	if err := json.Unmarshal(value, &tokenTargetQty); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if err := tokenTargetQty.Validate(); err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
+
+	for tokenID := range tokenTargetQty {
+		if _, err := self.setting.GetInternalTokenByID(tokenID); err != nil {
+			httputil.ResponseFailure(c, httputil.WithError(err))
+			return
+		}
 	}
+
 	err := self.metric.StorePendingTargetQtyV2(value)
 	if err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
@@ -1716,6 +1739,20 @@ func (self *HTTPServer) GetFeeSetRateByDay(c *gin.Context) {
 }
 
 func (self *HTTPServer) register() {
+	stt := self.r.Group("/setting")
+	stt.POST("/set-token-update", self.SetTokenUpdate)
+	stt.GET("/pending-token-update", self.GetPendingTokenUpdates)
+	stt.POST("/confirm-token-update", self.ConfirmTokenUpdate)
+	stt.POST("/reject-token-update", self.RejectTokenUpdate)
+	stt.GET("/token-settings", self.TokenSettings)
+	stt.POST("/update-address", self.UpdateAddress)
+	stt.POST("/add-address-to-set", self.AddAddressToSet)
+	stt.POST("/update-exchange-fee", self.UpdateExchangeFee)
+	stt.POST("/update-exchange-mindeposit", self.UpdateExchangeMinDeposit)
+	stt.POST("/update-deposit-address", self.UpdateDepositAddress)
+	stt.POST("/update-exchange-info", self.UpdateExchangeInfo)
+	stt.GET("/all-settings", self.GetAllSetting)
+
 	if self.core != nil && self.app != nil {
 		v2 := self.r.Group("/v2")
 
@@ -1844,8 +1881,9 @@ func NewHTTPServer(
 	host string,
 	enableAuth bool,
 	authEngine Authentication,
-	env string) *HTTPServer {
-
+	env string,
+	bc *blockchain.Blockchain,
+	setting Setting) *HTTPServer {
 	r := gin.Default()
 	sentryCli, err := raven.NewWithTags(
 		"https://bf15053001464a5195a81bc41b644751:eff41ac715114b20b940010208271b13@sentry.io/228067",
@@ -1867,6 +1905,6 @@ func NewHTTPServer(
 	r.Use(cors.New(corsConfig))
 
 	return &HTTPServer{
-		app, core, stat, metric, host, enableAuth, authEngine, r,
+		app, core, stat, metric, host, enableAuth, authEngine, r, bc, setting,
 	}
 }

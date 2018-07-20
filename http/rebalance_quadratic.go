@@ -2,11 +2,23 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/http/httputil"
-	"github.com/KyberNetwork/reserve-data/metric"
 	"github.com/gin-gonic/gin"
 )
+
+//CheckRebalanceQuadraticRequest check if request data is valid
+//rq (requested data) follow format map["tokenID"]{"a": float64, "b": float64, "c": float64}
+func (h *HTTPServer) CheckRebalanceQuadraticRequest(rq common.RebalanceQuadraticRequest) error {
+	for tokenID := range rq {
+		if _, err := h.setting.GetInternalTokenByID(tokenID); err != nil {
+			return fmt.Errorf("Getting token %s got err %s", tokenID, err.Error())
+		}
+	}
+	return nil
+}
 
 //SetRebalanceQuadratic set pending rebalance quadratic equation
 //input data follow json: {"data":{"KNC": {"a": 0.7, "b": 1.2, "c": 1.3}}}
@@ -20,12 +32,12 @@ func (h *HTTPServer) SetRebalanceQuadratic(c *gin.Context) {
 		httputil.ResponseFailure(c, httputil.WithReason(errDataSizeExceed.Error()))
 		return
 	}
-	var rq metric.RebalanceQuadraticRequest
+	var rq common.RebalanceQuadraticRequest
 	if err := json.Unmarshal(value, &rq); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}
-	if err := rq.Validate(); err != nil {
+	if err := h.CheckRebalanceQuadraticRequest(rq); err != nil {
 		httputil.ResponseFailure(c, httputil.WithError(err))
 		return
 	}

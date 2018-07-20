@@ -8,14 +8,18 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-const huobiOP string = "huobi_op"
+const HuobiOP string = "huobi_op"
 
 type Blockchain struct {
 	*blockchain.BaseBlockchain
 }
 
+func (self *Blockchain) GetIntermediatorAddr() ethereum.Address {
+	return self.OperatorAddresses()[HuobiOP]
+}
+
 func (self *Blockchain) SendTokenFromAccountToExchange(amount *big.Int, exchangeAddress ethereum.Address, tokenAddress ethereum.Address) (*types.Transaction, error) {
-	opts, err := self.GetTxOpts(huobiOP, nil, nil, nil)
+	opts, err := self.GetTxOpts(HuobiOP, nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -23,11 +27,11 @@ func (self *Blockchain) SendTokenFromAccountToExchange(amount *big.Int, exchange
 	if err != nil {
 		return nil, err
 	}
-	return self.SignAndBroadcast(tx, huobiOP)
+	return self.SignAndBroadcast(tx, HuobiOP)
 }
 
 func (self *Blockchain) SendETHFromAccountToExchange(amount *big.Int, exchangeAddress ethereum.Address) (*types.Transaction, error) {
-	opts, err := self.GetTxOpts(huobiOP, nil, nil, amount)
+	opts, err := self.GetTxOpts(HuobiOP, nil, nil, amount)
 	if err != nil {
 		return nil, err
 	}
@@ -35,14 +39,14 @@ func (self *Blockchain) SendETHFromAccountToExchange(amount *big.Int, exchangeAd
 	if err != nil {
 		return nil, err
 	}
-	return self.SignAndBroadcast(tx, huobiOP)
+	return self.SignAndBroadcast(tx, HuobiOP)
 }
 
 func NewBlockchain(
 	base *blockchain.BaseBlockchain,
 	signer blockchain.Signer, nonce blockchain.NonceCorpus) (*Blockchain, error) {
 
-	base.RegisterOperator(huobiOP, blockchain.NewOperator(signer, nonce))
+	base.RegisterOperator(HuobiOP, blockchain.NewOperator(signer, nonce))
 
 	return &Blockchain{
 		BaseBlockchain: base,

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/KyberNetwork/reserve-data/common"
+	"github.com/KyberNetwork/reserve-data/settings"
 	"github.com/KyberNetwork/reserve-data/stat/util"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
@@ -50,12 +51,10 @@ type Fetcher struct {
 	currentBlock           uint64
 	currentBlockUpdateTime uint64
 	deployBlock            uint64
-	reserveAddress         ethereum.Address
-	pricingAddress         ethereum.Address
 	apiKey                 string
-	thirdPartyReserves     []ethereum.Address
 	sleepTime              time.Duration
 	blockNumMarker         uint64
+	setting                Setting
 }
 
 func NewFetcher(
@@ -66,26 +65,22 @@ func NewFetcher(
 	feeSetRateStorage FeeSetRateStorage,
 	runner FetcherRunner,
 	deployBlock uint64,
-	reserve ethereum.Address,
-	pricingAddress ethereum.Address,
 	beginBlockSetRate uint64,
 	apiKey string,
-	thirdPartyReserves []ethereum.Address) *Fetcher {
+	setting Setting) *Fetcher {
 	sleepTime := time.Second
 	fetcher := &Fetcher{
-		statStorage:        statStorage,
-		logStorage:         logStorage,
-		rateStorage:        rateStorage,
-		userStorage:        userStorage,
-		feeSetRateStorage:  feeSetRateStorage,
-		blockchain:         nil,
-		runner:             runner,
-		deployBlock:        deployBlock,
-		reserveAddress:     reserve,
-		pricingAddress:     pricingAddress,
-		apiKey:             apiKey,
-		thirdPartyReserves: thirdPartyReserves,
-		sleepTime:          sleepTime,
+		statStorage:       statStorage,
+		logStorage:        logStorage,
+		rateStorage:       rateStorage,
+		userStorage:       userStorage,
+		feeSetRateStorage: feeSetRateStorage,
+		blockchain:        nil,
+		runner:            runner,
+		deployBlock:       deployBlock,
+		apiKey:            apiKey,
+		sleepTime:         sleepTime,
+		setting:           setting,
 	}
 	lastBlockChecked, err := fetcher.feeSetRateStorage.GetLastBlockChecked()
 	if err != nil {
@@ -148,7 +143,11 @@ func (self *Fetcher) FetchTxs(client http.Client) error {
 	if toBlock == 0 {
 		return errors.New("Can't get latest block nummber")
 	}
-	api := fmt.Sprintf("%s?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&apikey=%s", etherScanAPIEndpoint, self.pricingAddress.String(), fromBlock, toBlock, self.apiKey)
+	pricingAddress, err := self.setting.GetAddress(settings.Pricing)
+	if err != nil {
+		return err
+	}
+	api := fmt.Sprintf("%s?module=account&action=txlist&address=%s&startblock=%d&endblock=%d&apikey=%s", etherScanAPIEndpoint, pricingAddress.String(), fromBlock, toBlock, self.apiKey)
 	log.Println("api get txs of setrate: ", api)
 	resp, err := client.Get(api)
 	if err != nil {
@@ -649,27 +648,51 @@ func (self *Fetcher) GetReserveRates(
 	data.Store(reserveAddr, rates)
 }
 
-func (self *Fetcher) ReserveSupportedTokens(reserve ethereum.Address) []common.Token {
+func (self *Fetcher) ReserveSupportedTokens(reserve ethereum.Address) ([]common.Token, error) {
 	tokens := []common.Token{}
-	if reserve == self.reserveAddress {
-		for _, token := range common.InternalTokens() {
+	reserveAddr, err := self.setting.GetAddress(settings.Reserve)
+	if err != nil {
+		return tokens, err
+	}
+	if reserve == reserveAddr {
+		internalTokens, err := self.setting.GetInternalTokens()
+		if err != nil {
+			log.Printf("ERROR: Can not get internal tokens: %s", err)
+			return tokens, err
+		}
+		for _, token := range internalTokens {
 			if token.ID != "ETH" {
 				tokens = append(tokens, token)
 			}
 		}
 	} else {
-		for _, token := range common.NetworkTokens() {
+		activeTokens, err := self.setting.GetActiveTokens()
+		if err != nil {
+			log.Printf("ERROR: Can not get internal tokens: %s", err)
+			return tokens, err
+		}
+		for _, token := range activeTokens {
 			if token.ID != "ETH" {
 				tokens = append(tokens, token)
 			}
 		}
 	}
-	return tokens
+	return tokens, nil
 }
 
 func (self *Fetcher) FetchReserveRates(timepoint uint64) {
 	log.Printf("Fetching reserve and sanity rate from blockchain")
-	supportedReserves := append(self.thirdPartyReserves, self.reserveAddress)
+	thirdPartyReserves, err := self.setting.GetAddresses(settings.ThirdPartyReserves)
+	if err != nil {
+		log.Printf("ERROR: Can not get reserve rates %s", err)
+		return
+	}
+	reserveAddr, err := self.setting.GetAddress(settings.Reserve)
+	if err != nil {
+		log.Printf("ERROR: Can not get reserve rates %s", err)
+		return
+	}
+	supportedReserves := append(thirdPartyReserves, reserveAddr)
 	data := sync.Map{}
 	wg := sync.WaitGroup{}
 	// get current block to use to fetch all reserve rates.
@@ -677,10 +700,14 @@ func (self *Fetcher) FetchReserveRates(timepoint uint64) {
 	// because otherwise, rates from different reserves will not
 	// be synced with block no
 	block := self.currentBlock
-	for _, reserveAddr := range supportedReserves {
+	for _, reserve := range supportedReserves {
 		wg.Add(1)
-		tokens := self.ReserveSupportedTokens(reserveAddr)
-		go self.GetReserveRates(block, reserveAddr, tokens, &data, &wg)
+		tokens, err := self.ReserveSupportedTokens(reserve)
+		if err == nil {
+			go self.GetReserveRates(block, reserve, tokens, &data, &wg)
+		} else {
+			log.Printf("ERROR: Can not get reserve rates %s", err)
+		}
 	}
 	wg.Wait()
 	data.Range(func(key, value interface{}) bool {
@@ -933,31 +960,33 @@ func getTimestampFromTimeZone(t uint64, freq string) uint64 {
 
 func (self *Fetcher) getTradeInfo(trade common.TradeLog) (float64, float64, float64, float64) {
 	var srcAmount, destAmount, ethAmount, burnFee float64
-
-	eth := common.ETHToken()
-
 	srcAddr := common.AddrToString(trade.SrcAddress)
-	srcToken := common.MustGetSupportedTokenByAddress(srcAddr)
-	srcAmount = common.BigToFloat(trade.SrcAmount, srcToken.Decimal)
+	eth := self.setting.ETHToken()
+	srcToken, err := self.setting.GetTokenByAddress(ethereum.HexToAddress(srcAddr))
+	if err != nil {
+		log.Panicf("GetTradeInfo: can't get src Token (%s)", err)
+	}
+	srcAmount = common.BigToFloat(trade.SrcAmount, srcToken.Decimals)
+	if srcToken.IsETH() {
+		ethAmount = srcAmount
+	}
 
 	dstAddr := common.AddrToString(trade.DestAddress)
-	destToken := common.MustGetSupportedTokenByAddress(dstAddr)
-	destAmount = common.BigToFloat(trade.DestAmount, destToken.Decimal)
-
-	if srcToken.IsETH() {
-		// ETH-Token
-		ethAmount = srcAmount
-	} else if destToken.IsETH() {
-		// Token-ETH
+	destToken, err := self.setting.GetTokenByAddress(ethereum.HexToAddress(dstAddr))
+	if err != nil {
+		log.Panicf("GetTradeInfo: can't get dest Token (%s)", err)
+	}
+	destAmount = common.BigToFloat(trade.DestAmount, destToken.Decimals)
+	if destToken.IsETH() {
 		ethAmount = destAmount
 	} else if trade.EtherReceivalAmount != nil {
 		// Token-Token
-		receivalAmount := common.BigToFloat(trade.EtherReceivalAmount, eth.Decimal)
+		receivalAmount := common.BigToFloat(trade.EtherReceivalAmount, eth.Decimals)
 		ethAmount = receivalAmount
 	}
 
 	if trade.BurnFee != nil {
-		burnFee = common.BigToFloat(trade.BurnFee, eth.Decimal)
+		burnFee = common.BigToFloat(trade.BurnFee, eth.Decimals)
 	}
 
 	return srcAmount, destAmount, ethAmount, burnFee
@@ -1030,7 +1059,7 @@ func (self *Fetcher) aggregateVolumeStats(trade common.TradeLog, volumeStats map
 	self.aggregateVolumeStat(trade, userAddr, srcAmount, ethAmount, trade.FiatAmount, volumeStats)
 
 	// reserve volume
-	eth := common.ETHToken()
+	eth := self.setting.ETHToken()
 	var assetAddr string
 	var assetAmount float64
 	if srcAddr != eth.Address {
@@ -1067,9 +1096,9 @@ func (self *Fetcher) aggregateBurnFeeStats(trade common.TradeLog, burnFeeStats m
 
 	// wallet fee
 	var walletFee float64
-	eth := common.ETHToken()
+	eth := self.setting.ETHToken()
 	if trade.WalletFee != nil {
-		walletFee = common.BigToFloat(trade.WalletFee, eth.Decimal)
+		walletFee = common.BigToFloat(trade.WalletFee, eth.Decimals)
 	}
 	self.aggregateBurnfee(fmt.Sprintf("%s_%s", reserveAddr, walletAddr), walletFee, trade, burnFeeStats)
 	return nil
@@ -1081,15 +1110,20 @@ func (self *Fetcher) aggregateUserInfo(trade common.TradeLog, userInfos map[stri
 	dstAddr := common.AddrToString(trade.DestAddress)
 
 	var srcAmount, destAmount, ethAmount float64
-
-	srcToken := common.MustGetSupportedTokenByAddress(srcAddr)
-	srcAmount = common.BigToFloat(trade.SrcAmount, srcToken.Decimal)
+	srcToken, err := self.setting.GetTokenByAddress(ethereum.HexToAddress(srcAddr))
+	if err != nil {
+		log.Panicf("AggregateUserInfo: can't get src Token (%s)", err)
+	}
+	srcAmount = common.BigToFloat(trade.SrcAmount, srcToken.Decimals)
 	if srcToken.IsETH() {
 		ethAmount = srcAmount
 	}
 
-	destToken := common.MustGetSupportedTokenByAddress(dstAddr)
-	destAmount = common.BigToFloat(trade.DestAmount, destToken.Decimal)
+	destToken, err := self.setting.GetTokenByAddress(ethereum.HexToAddress(dstAddr))
+	if err != nil {
+		log.Panicf("GetTradeInfo: can't get dest Token (%s)", err)
+	}
+	destAmount = common.BigToFloat(trade.DestAmount, destToken.Decimals)
 	if destToken.IsETH() {
 		ethAmount = destAmount
 	}

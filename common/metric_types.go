@@ -1,9 +1,7 @@
-package metric
+package common
 
 import (
 	"fmt"
-
-	"github.com/KyberNetwork/reserve-data/common"
 )
 
 type TokenMetric struct {
@@ -73,16 +71,6 @@ type TargetQtyV2 struct {
 //TokenTargetQtyV2 represent a map of token and its target quantity struct
 type TokenTargetQtyV2 map[string]TargetQtyV2
 
-//Validate validate token target quantity input.
-func (tq TokenTargetQtyV2) Validate() error {
-	for k := range tq {
-		if _, err := common.GetInternalToken(k); err != nil {
-			return fmt.Errorf("Token %s is not supported", k)
-		}
-	}
-	return nil
-}
-
 // PWIEquationV2 contains the information of a PWI equation.
 type PWIEquationV2 struct {
 	A                   float64 `json:"a"`
@@ -137,11 +125,7 @@ func (input PWIEquationRequestV2) Validate() error {
 			return fmt.Errorf("invalid equation for token %s: %s", tokenID, err)
 		}
 
-		if _, err := common.GetInternalToken(tokenID); err != nil {
-			return fmt.Errorf("unsupported token %s", tokenID)
-		}
 	}
-
 	return nil
 }
 
@@ -157,14 +141,3 @@ type RebalanceQuadraticEquation struct {
 //RebalanceQuadraticRequest represent data request to set rebalance quadratic
 //map[token]equation
 type RebalanceQuadraticRequest map[string]RebalanceQuadraticEquation
-
-//Validate check if request data is valid.
-//rq (requested data) follow format map["tokenID"]{"a": float64, "b": float64, "c": float64}
-func (rq RebalanceQuadraticRequest) Validate() error {
-	for tokenID := range rq {
-		if _, err := common.GetInternalToken(tokenID); err != nil {
-			return fmt.Errorf("unsupported token %s", tokenID)
-		}
-	}
-	return nil
-}
