@@ -725,16 +725,6 @@ func (self *HTTPServer) GetMinDeposit(c *gin.Context) {
 	return
 }
 
-func (self *HTTPServer) GetAddress(c *gin.Context) {
-	addresses, err := self.core.GetAddresses()
-	if err != nil {
-		httputil.ResponseFailure(c, httputil.WithError(err))
-		return
-	}
-	httputil.ResponseSuccess(c, httputil.WithData(addresses))
-	return
-}
-
 func (self *HTTPServer) GetTradeHistory(c *gin.Context) {
 	_, ok := self.Authenticated(c, []string{}, []Permission{ReadOnlyPermission, RebalancePermission, ConfigurePermission, ConfirmConfPermission})
 	if !ok {
@@ -1546,7 +1536,6 @@ func (self *HTTPServer) register() {
 		self.r.GET("/exchangeinfo", self.GetExchangeInfo)
 		self.r.GET("/exchangefees", self.GetFee)
 		self.r.GET("/exchange-min-deposit", self.GetMinDeposit)
-		self.r.GET("/core/addresses", self.GetAddress) // remove this
 		self.r.GET("/tradehistory", self.GetTradeHistory)
 
 		v2.GET("/targetqty", self.GetTargetQtyV2)
