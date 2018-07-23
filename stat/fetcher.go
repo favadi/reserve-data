@@ -958,6 +958,7 @@ func getTimestampFromTimeZone(t uint64, freq string) uint64 {
 	return result
 }
 
+//This function return srcAmount, destAmount, ethAmount and burnFee information of a trade log respectively
 func (self *Fetcher) getTradeInfo(trade common.TradeLog) (float64, float64, float64, float64) {
 	var srcAmount, destAmount, ethAmount, burnFee float64
 	srcAddr := common.AddrToString(trade.SrcAddress)
@@ -1106,43 +1107,9 @@ func (self *Fetcher) aggregateBurnFeeStats(trade common.TradeLog, burnFeeStats m
 
 func (self *Fetcher) aggregateUserInfo(trade common.TradeLog, userInfos map[string]common.UserInfoTimezone) {
 	userAddr := common.AddrToString(trade.UserAddress)
-	srcAddr := common.AddrToString(trade.SrcAddress)
-	dstAddr := common.AddrToString(trade.DestAddress)
 
-	var srcAmount, destAmount, ethAmount float64
-	srcToken, err := self.setting.GetTokenByAddress(ethereum.HexToAddress(srcAddr))
-	if err != nil {
-		log.Panicf("AggregateUserInfo: can't get src Token (%s)", err)
-	}
-	srcAmount = common.BigToFloat(trade.SrcAmount, srcToken.Decimals)
-	if srcToken.IsETH() {
-		ethAmount = srcAmount
-	}
+	_, _, ethAmount, _ := self.getTradeInfo(trade)
 
-	destToken, err := self.setting.GetTokenByAddress(ethereum.HexToAddress(dstAddr))
-	if err != nil {
-		log.Panicf("GetTradeInfo: can't get dest Token (%s)", err)
-	}
-	destAmount = common.BigToFloat(trade.DestAmount, destToken.Decimals)
-	if destToken.IsETH() {
-		ethAmount = destAmount
-	}
-
-	// for _, token := range common.SupportedTokens {
-	// 	if strings.ToLower(token.Address) == srcAddr {
-	// 		srcAmount = common.BigToFloat(trade.SrcAmount, token.Decimal)
-	// 		if token.IsETH() {
-	// 			ethAmount = srcAmount
-	// 		}
-	// 	}
-
-	// 	if strings.ToLower(token.Address) == dstAddr {
-	// 		destAmount = common.BigToFloat(trade.DestAmount, token.Decimal)
-	// 		if token.IsETH() {
-	// 			ethAmount = destAmount
-	// 		}
-	// 	}
-	// }
 	email, _, err := self.userStorage.GetUserOfAddress(trade.UserAddress)
 	if err != nil {
 		return
