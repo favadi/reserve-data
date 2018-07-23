@@ -50,7 +50,7 @@ func (self ReserveCore) CancelOrder(id common.ActivityID, exchange common.Exchan
 	if err != nil {
 		return err
 	}
-	if activity.Action != "trade" {
+	if activity.Action != common.ActionTrade {
 		return errors.New("This is not an order activity so cannot cancel")
 	}
 	base, ok := activity.Params["base"].(string)
@@ -93,7 +93,7 @@ func (self ReserveCore) Trade(
 		)
 
 		return self.activityStorage.Record(
-			"trade",
+			common.ActionTrade,
 			uid,
 			string(exchange.ID()),
 			map[string]interface{}{
@@ -168,7 +168,7 @@ func (self ReserveCore) Deposit(
 		)
 
 		return self.activityStorage.Record(
-			"deposit",
+			common.ActionDeposit,
 			uid,
 			string(exchange.ID()),
 			map[string]interface{}{
@@ -245,7 +245,7 @@ func (self ReserveCore) Withdraw(
 			exchange.ID(), token.ID, amount.Text(10), timepoint, id, err,
 		)
 		return self.activityStorage.Record(
-			"withdraw",
+			common.ActionWithdraw,
 			uid,
 			string(exchange.ID()),
 			map[string]interface{}{
@@ -415,26 +415,26 @@ func (self ReserveCore) SetRates(
 	additionalMsgs []string) (common.ActivityID, error) {
 
 	var (
-		tx      *types.Transaction
-		txhex   string = ethereum.Hash{}.Hex()
-		txnonce string = "0"
-		txprice string = "0"
-		err     error
-		status  string
+		tx           *types.Transaction
+		txhex        string = ethereum.Hash{}.Hex()
+		txnonce      string = "0"
+		txprice      string = "0"
+		err          error
+		miningStatus string
 	)
 
 	tx, err = self.GetSetRateResult(tokens, buys, sells, afpMids, block)
 	if err != nil {
-		status = "failed"
+		miningStatus = common.MiningStatusFailed
 	} else {
-		status = "submitted"
+		miningStatus = common.MiningStatusSubmitted
 		txhex = tx.Hash().Hex()
 		txnonce = strconv.FormatUint(tx.Nonce(), 10)
 		txprice = tx.GasPrice().Text(10)
 	}
 	uid := timebasedID(txhex)
 	err = self.activityStorage.Record(
-		"set_rates",
+		common.ActionSetrate,
 		uid,
 		"blockchain",
 		map[string]interface{}{
@@ -451,7 +451,7 @@ func (self ReserveCore) SetRates(
 			"error":    common.ErrorToString(err),
 		},
 		"",
-		status,
+		miningStatus,
 		common.GetTimepoint(),
 	)
 	log.Printf(

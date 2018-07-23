@@ -677,7 +677,7 @@ func getLastAndCountPendingSetrate(pendings []common.ActivityRecord, minedNonce 
 	var result *common.ActivityRecord
 	var count uint64
 	for i, act := range pendings {
-		if act.Action == "set_rates" {
+		if act.Action == common.ActionSetrate {
 			log.Printf("looking for pending set_rates: %+v", act)
 			nonce := interfaceConverstionToUint64(act.Result["nonce"])
 			if nonce < minedNonce {
@@ -793,7 +793,7 @@ func (self *BoltStorage) HasPendingDeposit(token common.Token, exchange common.E
 			if uErr := json.Unmarshal(v, &record); uErr != nil {
 				return uErr
 			}
-			if record.Action == "deposit" {
+			if record.Action == common.ActionDeposit {
 				tokenID, ok := record.Params["token"].(string)
 				if !ok {
 					log.Printf("ERROR: record Params token (%v) can not be converted to string", record.Params["token"])

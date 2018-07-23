@@ -138,7 +138,7 @@ func CompareRate(oneAct common.ActivityRecord, oneRate common.AllRateResponse, b
 func CompareRates(acts []common.ActivityRecord, rates []common.AllRateResponse) {
 	idx := 0
 	for _, oneAct := range acts {
-		if (oneAct.Action == "set_rates") && (oneAct.MiningStatus == "mined") {
+		if (oneAct.Action == common.ActionSetrate) && (oneAct.MiningStatus == common.MiningStatusMined) {
 			_, ok := oneAct.Result["blockNumber"]
 			if ok {
 				curBlock := uint64(oneAct.Result["blockNumber"].(float64))

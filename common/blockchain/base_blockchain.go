@@ -334,7 +334,7 @@ func (self *BaseBlockchain) TxStatus(hash ethereum.Hash) (string, uint64, error)
 	if err != nil {
 		if err == ether.NotFound {
 			// tx doesn't exist. it failed
-			return "lost", 0, nil
+			return common.MiningStatusLost, 0, nil
 		}
 		// networking issue
 		return "", 0, err
@@ -356,22 +356,22 @@ func (self *BaseBlockchain) TxStatus(hash ethereum.Hash) (string, uint64, error)
 			if self.chainType == "byzantium" {
 				if receipt.Status == 1 {
 					// successful tx
-					return "mined", tx.BlockNumber().Uint64(), nil
+					return common.MiningStatusMined, tx.BlockNumber().Uint64(), nil
 				}
 				// failed tx
-				return "failed", tx.BlockNumber().Uint64(), nil
+				return common.MiningStatusFailed, tx.BlockNumber().Uint64(), nil
 			}
-			return "mined", tx.BlockNumber().Uint64(), nil
+			return common.MiningStatusMined, tx.BlockNumber().Uint64(), nil
 		}
 		// networking issue
 		return "", 0, err
 	}
 	if receipt.Status == 1 {
 		// successful tx
-		return "mined", tx.BlockNumber().Uint64(), nil
+		return common.MiningStatusMined, tx.BlockNumber().Uint64(), nil
 	}
 	// failed tx
-	return "failed", tx.BlockNumber().Uint64(), nil
+	return common.MiningStatusFailed, tx.BlockNumber().Uint64(), nil
 }
 
 func (self *BaseBlockchain) GetEthRate(timepoint uint64) float64 {
