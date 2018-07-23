@@ -7,6 +7,7 @@
 ### Bug fixes:
 
 ### Improvements:
+
 - refactor bolt storage implementation for stat (#357)
 
 - build binary only docker image (#339)
@@ -14,6 +15,8 @@
 - persistent core setting, allow setting transition between different deployment/ retain setting in fail over. (#294, #267, #320)
 
 - dynamic core setting, allow setting to be update on the fly. (#332. #361)
+
+- refactor SetRates function (#365)
 
 ### Compatibility
 
