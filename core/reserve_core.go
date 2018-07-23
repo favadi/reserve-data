@@ -342,38 +342,44 @@ func (self ReserveCore) pendingSetrateInfo(minedNonce uint64) (*big.Int, *big.In
 }
 
 func (self ReserveCore) GetSetRateResult(tokens []common.Token,
-	buys []*big.Int,
-	sells []*big.Int,
-	block *big.Int,
-	afpMids []*big.Int) (error, *types.Transaction) {
+	buys, sells, afpMids []*big.Int,
+	block *big.Int) (*types.Transaction, error) {
 	var (
 		tx  *types.Transaction
 		err error
 	)
-	if len(tokens) != len(buys) || len(tokens) != len(sells) || len(tokens) != len(afpMids) {
-		return errors.New("Tokens, buys sells and afpMids must have the same length"), tx
+	if len(tokens) != len(buys) {
+		return tx, fmt.Errorf("Number of buys (%d) is not equal to number of tokens (%d)", len(buys), len(tokens))
 	}
+	if len(tokens) != len(sells) {
+		return tx, fmt.Errorf("Number of sell (%d) is not equal to number of tokens (%d)", len(sells), len(tokens))
 
-	if err = sanityCheck(buys, afpMids, sells); err != nil {
-		return err, tx
 	}
-	tokenAddrs := []ethereum.Address{}
+	if len(tokens) != len(afpMids) {
+		return tx, fmt.Errorf("Number of afpMids (%d) is not equal to number of tokens (%d)", len(afpMids), len(tokens))
+	}
+	if err = sanityCheck(buys, afpMids, sells); err != nil {
+		return tx, err
+	}
+	var tokenAddrs []ethereum.Address
 	for _, token := range tokens {
 		tokenAddrs = append(tokenAddrs, ethereum.HexToAddress(token.Address))
 	}
 	// if there is a pending set rate tx, we replace it
-	var oldNonce *big.Int
-	var oldPrice *big.Int
-	var minedNonce uint64
-	var count uint64
+	var (
+		oldNonce   *big.Int
+		oldPrice   *big.Int
+		minedNonce uint64
+		count      uint64
+	)
 	minedNonce, err = self.blockchain.SetRateMinedNonce()
 	if err != nil {
-		return fmt.Errorf("Couldn't get mined nonce of set rate operator (%s)", err.Error()), tx
+		return tx, fmt.Errorf("Couldn't get mined nonce of set rate operator (%s)", err.Error())
 	}
 	oldNonce, oldPrice, count, err = self.pendingSetrateInfo(minedNonce)
 	log.Printf("old nonce: %v, old price: %v, count: %d, err: %s", oldNonce, oldPrice, count, common.ErrorToString(err))
 	if err != nil {
-		return fmt.Errorf("Couldn't check pending set rate tx pool (%s). Please try later", err.Error()), tx
+		return tx, fmt.Errorf("Couldn't check pending set rate tx pool (%s). Please try later", err.Error())
 	}
 	if oldNonce != nil {
 		newPrice := calculateNewGasPrice(oldPrice, count)
@@ -397,7 +403,7 @@ func (self ReserveCore) GetSetRateResult(tokens []common.Token,
 			initPrice,
 		)
 	}
-	return err, tx
+	return tx, err
 }
 
 func (self ReserveCore) SetRates(
@@ -417,7 +423,7 @@ func (self ReserveCore) SetRates(
 		status  string
 	)
 
-	err, tx = self.GetSetRateResult(tokens, buys, sells, block, afpMids)
+	tx, err = self.GetSetRateResult(tokens, buys, sells, afpMids, block)
 	if err != nil {
 		status = "failed"
 	} else {
