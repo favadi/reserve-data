@@ -26,6 +26,8 @@
 
 - refactor and fix skipping failed activity in Huobi Deposit (#373)
 
+- review and modify unnecessary panic (#376)
+
 ### Compatibility
 
 ## 0.10.0 (2018-07-03)
