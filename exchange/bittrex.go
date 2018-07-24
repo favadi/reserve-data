@@ -282,7 +282,7 @@ func (self *Bittrex) DepositStatus(
 			if err := self.storage.RegisterBittrexDeposit(deposit.Id, id); err != nil {
 				log.Printf("Register bittrex deposit error: %s", err.Error())
 			}
-			return "done", nil
+			return common.ExchangeStatusDone, nil
 		}
 	}
 	return "", nil
@@ -309,7 +309,7 @@ func (self *Bittrex) WithdrawStatus(id, currency string, amount float64, timepoi
 			if withdraw.PendingPayment {
 				return "", withdraw.TxId, nil
 			}
-			return "done", withdraw.TxId, nil
+			return common.ExchangeStatusDone, withdraw.TxId, nil
 		}
 	}
 	log.Printf("Withdraw with uuid " + id + " of currency " + currency + " is not found on bittrex")
@@ -324,7 +324,7 @@ func (self *Bittrex) OrderStatus(uuid string, base, quote string) (string, error
 	if resp_data.Result.IsOpen {
 		return "", nil
 	}
-	return "done", nil
+	return common.ExchangeStatusDone, nil
 }
 
 func (self *Bittrex) FetchOnePairData(wq *sync.WaitGroup, pair common.TokenPair, data *sync.Map, timepoint uint64) {

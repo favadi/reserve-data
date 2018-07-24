@@ -266,42 +266,42 @@ func NewActivityRecord(action string, id ActivityID, destination string, params,
 
 func (self ActivityRecord) IsExchangePending() bool {
 	switch self.Action {
-	case "withdraw":
-		return (self.ExchangeStatus == "" || self.ExchangeStatus == "submitted") &&
-			self.MiningStatus != "failed"
-	case "deposit":
-		return (self.ExchangeStatus == "" || self.ExchangeStatus == "pending") &&
-			self.MiningStatus != "failed"
-	case "trade":
-		return self.ExchangeStatus == "" || self.ExchangeStatus == "submitted"
+	case ActionWithdraw:
+		return (self.ExchangeStatus == "" || self.ExchangeStatus == ExchangeStatusSubmitted) &&
+			self.MiningStatus != MiningStatusFailed
+	case ActionDeposit:
+		return (self.ExchangeStatus == "" || self.ExchangeStatus == ExchangeStatusPending) &&
+			self.MiningStatus != MiningStatusFailed
+	case ActionTrade:
+		return self.ExchangeStatus == "" || self.ExchangeStatus == ExchangeStatusSubmitted
 	}
 	return true
 }
 
 func (self ActivityRecord) IsBlockchainPending() bool {
 	switch self.Action {
-	case "withdraw", "deposit", "set_rates":
-		return (self.MiningStatus == "" || self.MiningStatus == "submitted") && self.ExchangeStatus != "failed"
+	case ActionWithdraw, ActionDeposit, ActionSetrate:
+		return (self.MiningStatus == "" || self.MiningStatus == MiningStatusSubmitted) && self.ExchangeStatus != ExchangeStatusFailed
 	}
 	return true
 }
 
 func (self ActivityRecord) IsPending() bool {
 	switch self.Action {
-	case "withdraw":
-		return (self.ExchangeStatus == "" || self.ExchangeStatus == "submitted" ||
-			self.MiningStatus == "" || self.MiningStatus == "submitted") &&
-			self.MiningStatus != "failed" && self.ExchangeStatus != "failed"
-	case "deposit":
-		return (self.ExchangeStatus == "" || self.ExchangeStatus == "pending" ||
-			self.MiningStatus == "" || self.MiningStatus == "submitted") &&
-			self.MiningStatus != "failed" && self.ExchangeStatus != "failed"
-	case "trade":
-		return (self.ExchangeStatus == "" || self.ExchangeStatus == "submitted") &&
-			self.ExchangeStatus != "failed"
-	case "set_rates":
-		return (self.MiningStatus == "" || self.MiningStatus == "submitted") &&
-			self.ExchangeStatus != "failed"
+	case ActionWithdraw:
+		return (self.ExchangeStatus == "" || self.ExchangeStatus == ExchangeStatusSubmitted ||
+			self.MiningStatus == "" || self.MiningStatus == MiningStatusSubmitted) &&
+			self.MiningStatus != MiningStatusFailed && self.ExchangeStatus != ExchangeStatusFailed
+	case ActionDeposit:
+		return (self.ExchangeStatus == "" || self.ExchangeStatus == ExchangeStatusPending ||
+			self.MiningStatus == "" || self.MiningStatus == MiningStatusSubmitted) &&
+			self.MiningStatus != MiningStatusFailed && self.ExchangeStatus != ExchangeStatusFailed
+	case ActionTrade:
+		return (self.ExchangeStatus == "" || self.ExchangeStatus == ExchangeStatusSubmitted) &&
+			self.ExchangeStatus != ExchangeStatusFailed
+	case ActionSetrate:
+		return (self.MiningStatus == "" || self.MiningStatus == MiningStatusSubmitted) &&
+			self.ExchangeStatus != ExchangeStatusFailed
 	}
 	return true
 }
