@@ -67,22 +67,17 @@ func (self *BaseBlockchain) RecommendedGasPriceFromNode() (*big.Int, error) {
 	return self.client.SuggestGasPrice(timeout)
 }
 
-// GetOperator returns the operator if avail, return nil if the operator can't be found
+// GetOperator returns the operator if avail, panic if the operator can't be found
 func (self *BaseBlockchain) GetOperator(name string) *Operator {
 	op, found := self.operators[name]
 	if !found {
-		log.Printf("operator %s is not found. you have to register it before using it", name)
+		panic(fmt.Sprintf("operator %s is not found. you have to register it before using it", name))
 	}
 	return op
 }
 
 func (self *BaseBlockchain) GetMinedNonce(operator string) (uint64, error) {
-	op := self.GetOperator(operator)
-	if op == nil {
-		return 0, fmt.Errorf("cannot find operator %s", operator)
-	}
-	nonce, err := op.NonceCorpus.MinedNonce(self.client)
-
+	nonce, err := self.GetOperator(operator).NonceCorpus.MinedNonce(self.client)
 	if err != nil {
 		return 0, err
 	} else {
@@ -92,11 +87,7 @@ func (self *BaseBlockchain) GetMinedNonce(operator string) (uint64, error) {
 
 func (self *BaseBlockchain) GetNextNonce(operator string) (*big.Int, error) {
 	var nonce *big.Int
-	op := self.GetOperator(operator)
-	if op == nil {
-		return nonce, fmt.Errorf("cannot find operator %s", operator)
-	}
-	n := op.NonceCorpus
+	n := self.GetOperator(operator).NonceCorpus
 	var err error
 	for i := 0; i < 3; i++ {
 		nonce, err = n.GetNextNonce(self.client)
@@ -108,11 +99,7 @@ func (self *BaseBlockchain) GetNextNonce(operator string) (*big.Int, error) {
 }
 
 func (self *BaseBlockchain) SignAndBroadcast(tx *types.Transaction, from string) (*types.Transaction, error) {
-	op := self.GetOperator(from)
-	if op == nil {
-		return nil, fmt.Errorf("cannot find operator %s", from)
-	}
-	signer := op.Signer
+	signer := self.GetOperator(from).Signer
 	if tx == nil {
 		return nil, errors.New("Nil tx is forbidden here")
 	} else {

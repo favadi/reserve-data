@@ -572,7 +572,7 @@ func (self *Binance) WithdrawStatus(id, currency string, amount float64, timepoi
 func (self *Binance) OrderStatus(id string, base, quote string) (string, error) {
 	orderID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return "", fmt.Errorf("Can not parse orderID (val %v) to uint", id)
+		return "", fmt.Errorf("Can not parse orderID (val %s) to uint", id)
 	}
 	symbol := base + quote
 	order, err := self.interf.OrderStatus(symbol, orderID)
