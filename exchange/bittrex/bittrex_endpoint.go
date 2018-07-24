@@ -31,6 +31,7 @@ func nonce() string {
 
 func addPath(original string, path string) string {
 	url, err := url.Parse(original)
+	// If parsing raises error, this mean configuration is wrong.
 	if err != nil {
 		panic(err)
 	}

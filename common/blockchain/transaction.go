@@ -73,8 +73,10 @@ func (s *senderFromServer) Sender(tx *types.Transaction) (ethereum.Address, erro
 }
 
 func (s *senderFromServer) Hash(tx *types.Transaction) ethereum.Hash {
+	// This should never happen
 	panic("can't sign with senderFromServer")
 }
 func (s *senderFromServer) SignatureValues(tx *types.Transaction, sig []byte) (R, S, V *big.Int, err error) {
+	// This should never happen
 	panic("can't sign with senderFromServer")
 }

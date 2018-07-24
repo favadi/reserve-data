@@ -36,12 +36,8 @@ func (self *StableEx) Address(token common.Token) (ethereum.Address, bool) {
 	return addr, supported
 }
 
-func (self *StableEx) UpdateAllDepositAddresses(address string) {
-	panic("dgx doesn't support update deposit addresses")
-}
-
 func (self *StableEx) UpdateDepositAddress(token common.Token, address string) error {
-	panic("dgx doesn't support update deposit addresses")
+	return errors.New("dgx doesn't support update deposit addresses")
 }
 
 func (self *StableEx) GetInfo() (common.ExchangeInfo, error) {
