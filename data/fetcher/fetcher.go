@@ -207,13 +207,13 @@ func (self *Fetcher) FetchAllAuthData(timepoint uint64) {
 		if found {
 			activityStatus, ok := status.(common.ActivityStatus)
 			if !ok {
-				log.Print("ERROR: status from cexs cannot be asserted to common.ActivityStatus")
+				log.Print("WARNING: status from cexs cannot be asserted to common.ActivityStatus")
 				continue
 			}
 			//Set activity result tx to tx from cexs if currently result tx is not nil an is an empty string
 			resultTx, ok := activity.Result["tx"].(string)
 			if !ok {
-				log.Printf("ERROR: Activity Result Tx (value %v) cannot be asserted to string", activity.Result["tx"])
+				log.Printf("WARNING: Activity Result Tx (value %v) cannot be asserted to string", activity.Result["tx"])
 				continue
 			}
 			if resultTx == "" {
@@ -329,7 +329,7 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 			var err error
 			txStr, ok := activity.Result["tx"].(string)
 			if !ok {
-				log.Printf("ERROR: cannot convert activity.Result[tx] (value %v) to string type", activity.Result["tx"])
+				log.Printf("WARNING: cannot convert activity.Result[tx] (value %v) to string type", activity.Result["tx"])
 				continue
 			}
 			tx := ethereum.HexToHash(txStr)
@@ -470,7 +470,7 @@ func updateActivitywithExchangeStatus(activity *common.ActivityRecord, estatuses
 	}
 	resultTx, ok := activity.Result["tx"].(string)
 	if !ok {
-		log.Printf("ERROR: activity.Result[tx] (value %v) cannot be asserted to string type", activity.Result["tx"])
+		log.Printf("WARNING: activity.Result[tx] (value %v) cannot be asserted to string type", activity.Result["tx"])
 	} else if ok && resultTx == "" {
 		activity.Result["tx"] = activityStatus.Tx
 	}
@@ -617,12 +617,12 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				orderID := id.EID
 				base, ok := activity.Params["base"].(string)
 				if !ok {
-					log.Printf("ERROR: activity Params base (%v) can't be converted to type string", activity.Params["base"])
+					log.Printf("WARNING: activity Params base (%v) can't be converted to type string", activity.Params["base"])
 					continue
 				}
 				quote, ok := activity.Params["quote"].(string)
 				if !ok {
-					log.Printf("ERROR: activity Params quote (%v) can't be converted to type string", activity.Params["quote"])
+					log.Printf("WARNING: activity Params quote (%v) can't be converted to type string", activity.Params["quote"])
 					continue
 				}
 				// we ignore error of order status because it doesn't affect
@@ -631,22 +631,22 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 			} else if activity.Action == common.ActionDeposit {
 				txHash, ok := activity.Result["tx"].(string)
 				if !ok {
-					log.Printf("ERROR: activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
+					log.Printf("WARNING: activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
 					continue
 				}
 				amountStr, ok := activity.Params["amount"].(string)
 				if !ok {
-					log.Printf("ERROR: activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
+					log.Printf("WARNING: activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
 					continue
 				}
 				amount, uErr := strconv.ParseFloat(amountStr, 64)
 				if uErr != nil {
-					log.Printf("ERROR: can't parse activity Params amount %s to float64", amountStr)
+					log.Printf("WARNING: can't parse activity Params amount %s to float64", amountStr)
 					continue
 				}
 				currency, ok := activity.Params["token"].(string)
 				if !ok {
-					log.Printf("ERROR: activity Params token (%v) can't be converted to type string", activity.Params["token"])
+					log.Printf("WARNING: activity Params token (%v) can't be converted to type string", activity.Params["token"])
 					continue
 				}
 				status, err = exchange.DepositStatus(id, txHash, currency, amount, timepoint)
@@ -654,22 +654,22 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 			} else if activity.Action == common.ActionWithdraw {
 				amountStr, ok := activity.Params["amount"].(string)
 				if !ok {
-					log.Printf("ERROR: activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
+					log.Printf("WARNING: activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
 					continue
 				}
 				amount, uErr := strconv.ParseFloat(amountStr, 64)
 				if uErr != nil {
-					log.Printf("ERROR: can't parse activity Params amount %s to float64", amountStr)
+					log.Printf("WARNING: can't parse activity Params amount %s to float64", amountStr)
 					continue
 				}
 				currency, ok := activity.Params["token"].(string)
 				if !ok {
-					log.Printf("ERROR: activity Params token (%v) can't be converted to type string", activity.Params["token"])
+					log.Printf("WARNING: activity Params token (%v) can't be converted to type string", activity.Params["token"])
 					continue
 				}
 				tx, ok = activity.Result["tx"].(string)
 				if !ok {
-					log.Printf("ERROR: activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
+					log.Printf("WARNING: activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
 					continue
 				}
 				status, tx, err = exchange.WithdrawStatus(id.EID, currency, amount, timepoint)
