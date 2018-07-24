@@ -20,6 +20,8 @@
 
 - action type, mining status and exchange status are now use predefined constant instead of hard-code (#372)
 
+- remove comparerates package (#374)
+
 ### Compatibility
 
 ## 0.10.0 (2018-07-03)
