@@ -300,7 +300,7 @@ func (self *Fetcher) newNonceValidator() func(common.ActivityRecord) bool {
 		// this check only works with set rate transaction as:
 		//   - account nonce is record in result field of activity
 		//   - the SetRateMinedNonce method is available
-		if act.Action != "set_rates" {
+		if act.Action != common.ActionSetrate {
 			return false
 		}
 
@@ -323,7 +323,7 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 	nonceValidator := self.newNonceValidator()
 
 	for _, activity := range pendings {
-		if activity.IsBlockchainPending() && (activity.Action == "set_rates" || activity.Action == "deposit" || activity.Action == "withdraw") {
+		if activity.IsBlockchainPending() && (activity.Action == common.ActionSetrate || activity.Action == common.ActionDeposit || activity.Action == common.ActionWithdraw) {
 			var blockNum uint64
 			var status string
 			var err error
@@ -347,27 +347,27 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 						activity.ExchangeStatus,
 						txStr,
 						blockNum,
-						"failed",
+						common.MiningStatusFailed,
 						err,
 					)
 				}
-			case "mined":
+			case common.MiningStatusMined:
 				result[activity.ID] = common.NewActivityStatus(
 					activity.ExchangeStatus,
 					txStr,
 					blockNum,
-					"mined",
+					common.MiningStatusMined,
 					err,
 				)
-			case "failed":
+			case common.MiningStatusFailed:
 				result[activity.ID] = common.NewActivityStatus(
 					activity.ExchangeStatus,
 					txStr,
 					blockNum,
-					"failed",
+					common.MiningStatusFailed,
 					err,
 				)
-			case "lost":
+			case common.MiningStatusLost:
 				var (
 					// expiredDuration is the amount of time after that if a transaction doesn't appear,
 					// it is considered failed
@@ -389,7 +389,7 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 						activity.ExchangeStatus,
 						txStr,
 						blockNum,
-						"failed",
+						common.MiningStatusFailed,
 						err,
 					)
 				}
@@ -435,7 +435,7 @@ func updateActivitywithBlockchainStatus(activity *common.ActivityRecord, bstatus
 		activity.MiningStatus = activityStatus.MiningStatus
 	}
 
-	if activityStatus.ExchangeStatus == "failed" {
+	if activityStatus.ExchangeStatus == common.ExchangeStatusFailed {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
 	}
 
@@ -464,7 +464,7 @@ func updateActivitywithExchangeStatus(activity *common.ActivityRecord, estatuses
 	if activity.IsExchangePending() {
 		activity.ExchangeStatus = activityStatus.ExchangeStatus
 	} else {
-		if activityStatus.ExchangeStatus == "failed" {
+		if activityStatus.ExchangeStatus == common.ExchangeStatusFailed {
 			activity.ExchangeStatus = activityStatus.ExchangeStatus
 		}
 	}
@@ -613,7 +613,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 
 			id := activity.ID
 			//These type conversion errors can be ignore since if happens, it will be reflected in activity.error
-			if activity.Action == "trade" {
+			if activity.Action == common.ActionTrade {
 				orderID := id.EID
 				base, ok := activity.Params["base"].(string)
 				if !ok {
@@ -628,7 +628,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				// we ignore error of order status because it doesn't affect
 				// authdata. Analytic will ignore order status anyway.
 				status, _ = exchange.OrderStatus(orderID, base, quote)
-			} else if activity.Action == "deposit" {
+			} else if activity.Action == common.ActionDeposit {
 				txHash, ok := activity.Result["tx"].(string)
 				if !ok {
 					log.Printf("ERROR: activity Result tx (%v) can't be converted to type string", activity.Result["tx"])
@@ -651,7 +651,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				}
 				status, err = exchange.DepositStatus(id, txHash, currency, amount, timepoint)
 				log.Printf("Got deposit status for %v: (%s), error(%s)", activity, status, common.ErrorToString(err))
-			} else if activity.Action == "withdraw" {
+			} else if activity.Action == common.ActionWithdraw {
 				amountStr, ok := activity.Params["amount"].(string)
 				if !ok {
 					log.Printf("ERROR: activity Params amount (%v) can't be converted to type string", activity.Params["amount"])
@@ -684,7 +684,7 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
 			} else {
 				if common.GetTimepoint()-timepoint > uint64(maxActivityLifeTime*uint64(time.Hour))/uint64(time.Millisecond) {
-					result[id] = common.NewActivityStatus("failed", tx, blockNum, activity.MiningStatus, err)
+					result[id] = common.NewActivityStatus(common.ExchangeStatusFailed, tx, blockNum, activity.MiningStatus, err)
 				} else {
 					result[id] = common.NewActivityStatus(status, tx, blockNum, activity.MiningStatus, err)
 				}
@@ -695,11 +695,11 @@ func (self *Fetcher) FetchStatusFromExchange(exchange Exchange, pendings []commo
 				log.Printf("Activity %v has invalid timestamp. Just ignore it.", activity)
 			} else {
 				if activity.Destination == string(exchange.ID()) &&
-					activity.ExchangeStatus == "done" &&
+					activity.ExchangeStatus == common.ExchangeStatusDone &&
 					common.GetTimepoint()-timepoint > uint64(maxActivityLifeTime*uint64(time.Hour))/uint64(time.Millisecond) {
 					// the activity is still pending but its exchange status is done and it is stuck there for more than
 					// maxActivityLifeTime. This activity is considered failed.
-					result[activity.ID] = common.NewActivityStatus("failed", "", 0, activity.MiningStatus, nil)
+					result[activity.ID] = common.NewActivityStatus(common.ExchangeStatusFailed, "", 0, activity.MiningStatus, nil)
 				}
 			}
 		}

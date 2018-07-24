@@ -537,7 +537,7 @@ func (self *Binance) DepositStatus(id common.ActivityID, txHash, currency string
 		for _, deposit := range deposits.Deposits {
 			if deposit.TxID == txHash {
 				if deposit.Status == 1 {
-					return "done", nil
+					return common.ExchangeStatusDone, nil
 				} else {
 					return "", nil
 				}
@@ -558,7 +558,7 @@ func (self *Binance) WithdrawStatus(id, currency string, amount float64, timepoi
 		for _, withdraw := range withdraws.Withdrawals {
 			if withdraw.ID == id {
 				if withdraw.Status == 3 || withdraw.Status == 5 || withdraw.Status == 6 {
-					return "done", withdraw.TxID, nil
+					return common.ExchangeStatusDone, withdraw.TxID, nil
 				} else {
 					return "", withdraw.TxID, nil
 				}
@@ -582,7 +582,7 @@ func (self *Binance) OrderStatus(id string, base, quote string) (string, error) 
 	if order.Status == "NEW" || order.Status == "PARTIALLY_FILLED" || order.Status == "PENDING_CANCEL" {
 		return "", nil
 	} else {
-		return "done", nil
+		return common.ExchangeStatusDone, nil
 	}
 }
 

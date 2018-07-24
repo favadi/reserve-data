@@ -595,7 +595,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 			return "", nil
 		}
 		log.Printf("Huobi Status for Tx1 was %s at block %d ", status, blockno)
-		if status == "mined" {
+		if status == common.MiningStatusMined {
 			//if it is mined, send 2nd tx.
 			log.Printf("Found a new deposit status, which deposit %f %s. Procceed to send it to Huobi", sentAmount, currency)
 			//check if the token is supported, the token can be active or inactivee
@@ -617,7 +617,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 				tx2.Hash().Hex(),
 				self.Name(),
 				currency,
-				"submitted",
+				common.MiningStatusSubmitted,
 				"",
 				sentAmount,
 				common.GetTimestamp(),
@@ -635,13 +635,13 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 	if err != nil {
 		return "", err
 	}
-	if status == "mined" {
+	if status == common.MiningStatusMined {
 		log.Println("Huobi 2nd Transaction is mined. Processed to store it and check the Huobi Deposit history")
 		data = common.NewTXEntry(
 			tx2Entry.Hash,
 			self.Name(),
 			currency,
-			"mined",
+			common.MiningStatusMined,
 			"",
 			sentAmount,
 			common.GetTimestamp(),
@@ -670,8 +670,8 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 						tx2Entry.Hash,
 						self.Name(),
 						currency,
-						"mined",
-						"done",
+						common.MiningStatusMined,
+						common.ExchangeStatusDone,
 						sentAmount,
 						common.GetTimestamp(),
 					)
@@ -679,7 +679,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 						log.Printf("Huobi Trying to store intermediate tx to huobi storage, error: %s. Ignore it and try later", err.Error())
 						return "", nil
 					}
-					return "done", nil
+					return common.ExchangeStatusDone, nil
 				}
 				//TODO : handle other states following https://github.com/huobiapi/API_Docs_en/wiki/REST_Reference#deposit-states
 				log.Printf("Huobi Tx %s is found but the status was not safe but %s", deposit.TxHash, deposit.State)
@@ -688,27 +688,27 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 		}
 		log.Printf("Huobi Deposit doesn't exist. Huobi hasn't recognized the deposit yet or in theory, you have more than %d deposits at the same time.", len(tokens)*2)
 		return "", nil
-	} else if status == "failed" {
+	} else if status == common.MiningStatusFailed {
 		data = common.NewTXEntry(
 			tx2Entry.Hash,
 			self.Name(),
 			currency,
-			"failed",
-			"failed",
+			common.MiningStatusFailed,
+			common.ExchangeStatusFailed,
 			sentAmount,
 			common.GetTimestamp(),
 		)
 
-		return "failed", nil
-	} else if status == "lost" {
+		return common.ExchangeStatusFailed, nil
+	} else if status == common.MiningStatusLost {
 		elapsed := common.GetTimepoint() - tx2Entry.Timestamp.ToUint64()
 		if elapsed > uint64(15*time.Minute/time.Millisecond) {
 			data = common.NewTXEntry(
 				tx2Entry.Hash,
 				self.Name(),
 				currency,
-				"lost",
-				"lost",
+				common.MiningStatusLost,
+				common.ExchangeStatusLost,
 				sentAmount,
 				common.GetTimestamp(),
 			)
@@ -717,7 +717,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 				return "", nil
 			}
 			log.Printf("The tx is not found for over 15mins, it is considered as lost and the deposit failed")
-			return "failed", nil
+			return common.ExchangeStatusFailed, nil
 		}
 		return "", nil
 	}
@@ -739,7 +739,7 @@ func (self *Huobi) WithdrawStatus(
 	for _, withdraw := range withdraws.Data {
 		if withdraw.TxID == withdrawID {
 			if withdraw.State == "confirmed" {
-				return "done", withdraw.TxHash, nil
+				return common.ExchangeStatusDone, withdraw.TxHash, nil
 			}
 			return "", withdraw.TxHash, nil
 		}
@@ -760,7 +760,7 @@ func (self *Huobi) OrderStatus(id string, base, quote string) (string, error) {
 	if order.Data.State == "pre-submitted" || order.Data.State == "submitting" || order.Data.State == "submitted" || order.Data.State == "partial-filled" || order.Data.State == "partial-canceled" {
 		return "", nil
 	}
-	return "done", nil
+	return common.ExchangeStatusDone, nil
 }
 
 //NewHuobi creates new Huobi exchange instance
