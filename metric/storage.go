@@ -7,23 +7,14 @@ import (
 // MetricStorage is the interface that wraps all metrics database operations.
 type MetricStorage interface {
 	StoreMetric(data *common.MetricEntry, timepoint uint64) error
-	StoreTokenTargetQty(id, data string) error
-	StorePendingTargetQty(data, dataType string) error
 	StoreRebalanceControl(status bool) error
 	StoreSetrateControl(status bool) error
-	StorePendingPWIEquation(data string) error
-	StorePWIEquation(data string) error
 
 	GetMetric(tokens []common.Token, fromTime, toTime uint64) (map[string]common.MetricList, error)
 	GetTokenTargetQty() (common.TokenTargetQty, error)
-	GetPendingTargetQty() (common.TokenTargetQty, error)
 	GetRebalanceControl() (common.RebalanceControl, error)
 	GetSetrateControl() (common.SetrateControl, error)
-	GetPendingPWIEquation() (common.PWIEquation, error)
 	GetPWIEquation() (common.PWIEquation, error)
-
-	RemovePendingTargetQty() error
-	RemovePendingPWIEquation() error
 
 	SetStableTokenParams(value []byte) error
 	ConfirmStableTokenParams(value []byte) error

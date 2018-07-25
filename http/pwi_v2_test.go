@@ -25,7 +25,6 @@ func TestHTTPServerPWIEquationV2(t *testing.T) {
 		confirmPWIEquationV2              = "/v2/confirm-pwis-equation"
 		rejectPWIEquationV2               = "/v2/reject-pwis-equation"
 		getPWIEquationV2                  = "/v2/pwis-equation"
-		testDataV1                        = `EOS_750_500_0.25|ETH_750_500_0.25`
 		testData                          = `{
   "EOS": {
     "bid": {
@@ -235,30 +234,6 @@ func TestHTTPServerPWIEquationV2(t *testing.T) {
 			endpoint: getPWIEquationV2,
 			method:   http.MethodGet,
 			assert:   httputil.ExpectFailure,
-		},
-		{
-			msg:      "setting equation v1 pending",
-			endpoint: "/set-pwis-equation",
-			method:   http.MethodPost,
-			data: map[string]string{
-				"data": testDataV1,
-			},
-			assert: httputil.ExpectSuccess,
-		},
-		{
-			msg:      "confirm equation v1 pending",
-			endpoint: "/confirm-pwis-equation",
-			method:   http.MethodPost,
-			data: map[string]string{
-				"data": testDataV1,
-			},
-			assert: httputil.ExpectSuccess,
-		},
-		{
-			msg:      "getting fallback v1 equation",
-			endpoint: getPWIEquationV2,
-			method:   http.MethodGet,
-			assert:   newAssertGetEquation([]byte(testData)),
 		},
 		{
 			msg:      "unsupported token",

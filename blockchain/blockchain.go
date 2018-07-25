@@ -10,7 +10,6 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/common/blockchain"
-	hbblockchain "github.com/KyberNetwork/reserve-data/exchange/huobi/blockchain"
 	"github.com/KyberNetwork/reserve-data/settings"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethereum "github.com/ethereum/go-ethereum/common"
@@ -87,62 +86,6 @@ func (self *Blockchain) AddOldNetwork(addr ethereum.Address) error {
 
 func (self *Blockchain) AddOldBurners(addr ethereum.Address) error {
 	return self.setting.AddAddressToSet(settings.OldBurners, addr)
-}
-
-func (self *Blockchain) GetAddresses() (*common.Addresses, error) {
-	exs := map[common.ExchangeID]common.TokenAddresses{}
-	for _, ex := range common.SupportedExchanges {
-		addrs, err := ex.TokenAddresses()
-		if err != nil {
-			return nil, fmt.Errorf("ERROR: Can't not get deposit addresss of exchange %s :(%s)", ex.ID(), err.Error())
-		}
-		exs[ex.ID()] = addrs
-
-	}
-	tokens := map[string]common.TokenInfo{}
-	tokenSettings, err := self.setting.GetInternalTokens()
-	if err != nil {
-		return nil, err
-	}
-	for _, t := range tokenSettings {
-		tokens[t.ID] = common.TokenInfo{
-			Address:  ethereum.HexToAddress(t.Address),
-			Decimals: t.Decimals,
-		}
-	}
-	wrapperAddr, err := self.setting.GetAddress(settings.Wrapper)
-	if err != nil {
-		return nil, err
-	}
-	pricingAddr, err := self.setting.GetAddress(settings.Pricing)
-	if err != nil {
-		return nil, err
-	}
-	reserveAddr, err := self.setting.GetAddress(settings.Reserve)
-	if err != nil {
-		return nil, err
-	}
-	burnerAddr, err := self.setting.GetAddress(settings.Burner)
-	if err != nil {
-		return nil, err
-	}
-	networkAddr, err := self.setting.GetAddress(settings.Network)
-	if err != nil {
-		return nil, err
-	}
-	opAddrs := self.OperatorAddresses()
-	return common.NewAddresses(
-		tokens,
-		exs,
-		wrapperAddr,
-		pricingAddr,
-		reserveAddr,
-		burnerAddr,
-		networkAddr,
-		opAddrs[pricingOP],
-		opAddrs[depositOP],
-		opAddrs[hbblockchain.HuobiOP],
-	), nil
 }
 
 func (self *Blockchain) CheckTokenIndices(tokenAddr ethereum.Address) error {
