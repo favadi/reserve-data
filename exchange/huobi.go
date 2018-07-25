@@ -708,7 +708,7 @@ func (self *Huobi) DepositStatus(id common.ActivityID, tx1Hash, currency string,
 		}
 		return common.ExchangeStatusFailed, nil
 	case common.MiningStatusLost:
-		elapsed := common.GetTimepoint() - tx2Entry.Timestamp.ToUint64()
+		elapsed := common.GetTimepoint() - tx2Entry.Timestamp.MustToUint64()
 		if elapsed > uint64(15*time.Minute/time.Millisecond) {
 			data = common.NewTXEntry(
 				tx2Entry.Hash,

@@ -16,7 +16,7 @@ import (
 type Version uint64
 type Timestamp string
 
-func (self Timestamp) ToUint64() uint64 {
+func (self Timestamp) MustToUint64() uint64 {
 	res, err := strconv.ParseUint(string(self), 10, 64)
 	//  this should never happen. Timestamp is never manually entered.
 	if err != nil {

@@ -377,7 +377,7 @@ func (self *Fetcher) FetchStatusFromBlockchain(pendings []common.ActivityRecord)
 				if nonceValidator(activity) {
 					txFailed = true
 				} else {
-					elapsed := common.GetTimepoint() - activity.Timestamp.ToUint64()
+					elapsed := common.GetTimepoint() - activity.Timestamp.MustToUint64()
 					if elapsed > uint64(expiredDuration/time.Millisecond) {
 						log.Printf("Fetcher tx status: tx(%s) is lost, elapsed time: %d", txStr, elapsed)
 						txFailed = true

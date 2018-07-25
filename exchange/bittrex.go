@@ -226,7 +226,7 @@ func (self *Bittrex) Withdraw(token common.Token, amount *big.Int, address ether
 	return "", errors.New(resp.Error)
 }
 
-func bitttimestampToUint64(input string) (uint64, error) {
+func bittrexTimestampToUint64(input string) (uint64, error) {
 	var t time.Time
 	var err error
 	len := len(input)
@@ -262,7 +262,7 @@ func (self *Bittrex) DepositStatus(
 		return "", err
 	}
 	for _, deposit := range histories.Result {
-		uint64Timestamp, err := bitttimestampToUint64(deposit.LastUpdated)
+		uint64Timestamp, err := bittrexTimestampToUint64(deposit.LastUpdated)
 		if err != nil {
 			return "", fmt.Errorf("cannot parse timestamp to uint64 (%s)", err)
 		}
