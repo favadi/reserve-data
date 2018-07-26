@@ -15,7 +15,7 @@ import (
 
 	"github.com/KyberNetwork/reserve-data/common"
 	"github.com/KyberNetwork/reserve-data/settings"
-	"github.com/KyberNetwork/reserve-data/stat/util"
+	statutil "github.com/KyberNetwork/reserve-data/stat/util"
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
@@ -55,6 +55,7 @@ type Fetcher struct {
 	sleepTime              time.Duration
 	blockNumMarker         uint64
 	setting                Setting
+	ipLocator              *statutil.IPLocator
 }
 
 func NewFetcher(
@@ -67,7 +68,8 @@ func NewFetcher(
 	deployBlock uint64,
 	beginBlockSetRate uint64,
 	apiKey string,
-	setting Setting) *Fetcher {
+	setting Setting,
+	iploc *statutil.IPLocator) *Fetcher {
 	sleepTime := time.Second
 	fetcher := &Fetcher{
 		statStorage:       statStorage,
@@ -81,6 +83,7 @@ func NewFetcher(
 		apiKey:            apiKey,
 		sleepTime:         sleepTime,
 		setting:           setting,
+		ipLocator:         iploc,
 	}
 	lastBlockChecked, err := fetcher.feeSetRateStorage.GetLastBlockChecked()
 	if err != nil {
@@ -785,7 +788,7 @@ func (self *Fetcher) RunBlockFetcher() {
 }
 
 //GetTradeGeo get geo from trade log
-func GetTradeGeo(txHash string) (string, string, error) {
+func GetTradeGeo(ipLocator *statutil.IPLocator, txHash string) (string, string, error) {
 	url := fmt.Sprintf("%s/get-tx-info/%s", broadcastKyberAPIEndpoint, txHash)
 
 	resp, err := http.Get(url)
@@ -811,7 +814,7 @@ func GetTradeGeo(txHash string) (string, string, error) {
 		if response.Data.Country != "" {
 			return response.Data.IP, response.Data.Country, err
 		}
-		country, err = util.IPToCountry(response.Data.IP)
+		country, err = ipLocator.IPToCountry(response.Data.IP)
 		if err != nil {
 			return "", "", err
 		}
@@ -833,9 +836,9 @@ func enforceFromBlock(fromBlock uint64) uint64 {
 // }
 
 //SetCountryField set country field for tradelog
-func SetcountryFields(l *common.TradeLog) {
+func SetcountryFields(ipLocator *statutil.IPLocator, l *common.TradeLog) {
 	txHash := l.TxHash()
-	ip, country, err := GetTradeGeo(txHash.Hex())
+	ip, country, err := GetTradeGeo(ipLocator, txHash.Hex())
 	if err != nil {
 		log.Printf("LogFetcher - Getting country failed")
 	}
@@ -898,7 +901,7 @@ func (self *Fetcher) FetchLogs(fromBlock uint64, toBlock uint64, timepoint uint6
 					log.Printf("LogFetcher: ERROR cannot convert log (%v) to tradelog", il)
 					continue
 				}
-				SetcountryFields(&l)
+				SetcountryFields(self.ipLocator, &l)
 				if dbErr := self.CheckDupAndStoreTradeLog(l, timepoint); dbErr != nil {
 					log.Printf("LogFetcher - at block %d, storing trade log failed, stop at current block and wait till next ticker, err: %+v", l.BlockNo(), dbErr)
 					return maxBlock, dbErr
