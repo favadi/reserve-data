@@ -2,6 +2,7 @@ package settings_test
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -12,11 +13,7 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
-func getTestSetting(t *testing.T) *settings.Settings {
-	tmpDir, err := ioutil.TempDir("", "test_setting.db")
-	if err != nil {
-		t.Fatal(err)
-	}
+func getTestSetting(t *testing.T, tmpDir string) *settings.Settings {
 	boltSettingStorage, err := settingsstorage.NewBoltSettingStorage(filepath.Join(tmpDir, "setting.db"))
 	if err != nil {
 		t.Fatal(err)
@@ -137,7 +134,16 @@ func testGetToken(setting *settings.Settings, testToken common.Token, t *testing
 
 func TestInternaTokenSetting(t *testing.T) {
 	testInternalToken := common.NewToken("OMG", "omise-go", "0x1111111111111111111111111111111111111111", 18, true, true, 0)
-	setting := getTestSetting(t)
+	tmpDir, err := ioutil.TempDir("", "test_setting")
+	if err != nil {
+		t.Fatal(err)
+	}
+	setting := getTestSetting(t, tmpDir)
+	defer func() {
+		if rErr := os.RemoveAll(tmpDir); rErr != nil {
+			t.Error(rErr)
+		}
+	}()
 	if err := setting.UpdateToken(testInternalToken); err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +154,16 @@ func TestInternaTokenSetting(t *testing.T) {
 
 func TestExternalTokenSetting(t *testing.T) {
 	testExternalToken := common.NewToken("KNC", "Kyber-coin", "0x2222222222222222222222222222222222222222", 18, true, false, 0)
-	setting := getTestSetting(t)
+	tmpDir, err := ioutil.TempDir("", "test_setting")
+	if err != nil {
+		t.Fatal(err)
+	}
+	setting := getTestSetting(t, tmpDir)
+	defer func() {
+		if rErr := os.RemoveAll(tmpDir); rErr != nil {
+			t.Error(rErr)
+		}
+	}()
 	if err := setting.UpdateToken(testExternalToken); err != nil {
 		t.Fatal(err)
 	}
