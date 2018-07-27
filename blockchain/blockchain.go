@@ -138,12 +138,12 @@ func (self *Blockchain) LoadAndSetTokenIndices(tokenAddrs []ethereum.Address) er
 
 func (self *Blockchain) RegisterPricingOperator(signer blockchain.Signer, nonceCorpus blockchain.NonceCorpus) {
 	log.Printf("reserve pricing address: %s", signer.GetAddress().Hex())
-	self.RegisterOperator(pricingOP, blockchain.NewOperator(signer, nonceCorpus))
+	self.MustRegisterOperator(pricingOP, blockchain.NewOperator(signer, nonceCorpus))
 }
 
 func (self *Blockchain) RegisterDepositOperator(signer blockchain.Signer, nonceCorpus blockchain.NonceCorpus) {
 	log.Printf("reserve depositor address: %s", signer.GetAddress().Hex())
-	self.RegisterOperator(depositOP, blockchain.NewOperator(signer, nonceCorpus))
+	self.MustRegisterOperator(depositOP, blockchain.NewOperator(signer, nonceCorpus))
 }
 
 func readablePrint(data map[ethereum.Address]byte) string {

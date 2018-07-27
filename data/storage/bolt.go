@@ -301,7 +301,7 @@ func (self *BoltStorage) PruneOutdatedData(tx *bolt.Tx, bucket string) error {
 		}
 		err = b.Delete([]byte(k))
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 

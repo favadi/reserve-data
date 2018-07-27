@@ -53,7 +53,8 @@ func (self *BaseBlockchain) OperatorAddresses() map[string]ethereum.Address {
 	return result
 }
 
-func (self *BaseBlockchain) RegisterOperator(name string, op *Operator) {
+func (self *BaseBlockchain) MustRegisterOperator(name string, op *Operator) {
+	//This shouldn't happen, each operator get registered only once.
 	if _, found := self.operators[name]; found {
 		panic(fmt.Sprintf("Operator name %s already exist", name))
 	}
@@ -66,7 +67,8 @@ func (self *BaseBlockchain) RecommendedGasPriceFromNode() (*big.Int, error) {
 	return self.client.SuggestGasPrice(timeout)
 }
 
-func (self *BaseBlockchain) GetOperator(name string) *Operator {
+// MustGetOperator returns the operator if avail, panic if the operator can't be found
+func (self *BaseBlockchain) MustGetOperator(name string) *Operator {
 	op, found := self.operators[name]
 	if !found {
 		panic(fmt.Sprintf("operator %s is not found. you have to register it before using it", name))
@@ -75,7 +77,7 @@ func (self *BaseBlockchain) GetOperator(name string) *Operator {
 }
 
 func (self *BaseBlockchain) GetMinedNonce(operator string) (uint64, error) {
-	nonce, err := self.GetOperator(operator).NonceCorpus.MinedNonce(self.client)
+	nonce, err := self.MustGetOperator(operator).NonceCorpus.MinedNonce(self.client)
 	if err != nil {
 		return 0, err
 	} else {
@@ -84,8 +86,8 @@ func (self *BaseBlockchain) GetMinedNonce(operator string) (uint64, error) {
 }
 
 func (self *BaseBlockchain) GetNextNonce(operator string) (*big.Int, error) {
-	n := self.GetOperator(operator).NonceCorpus
 	var nonce *big.Int
+	n := self.MustGetOperator(operator).NonceCorpus
 	var err error
 	for i := 0; i < 3; i++ {
 		nonce, err = n.GetNextNonce(self.client)
@@ -97,9 +99,9 @@ func (self *BaseBlockchain) GetNextNonce(operator string) (*big.Int, error) {
 }
 
 func (self *BaseBlockchain) SignAndBroadcast(tx *types.Transaction, from string) (*types.Transaction, error) {
-	signer := self.GetOperator(from).Signer
+	signer := self.MustGetOperator(from).Signer
 	if tx == nil {
-		panic(errors.New("Nil tx is forbidden here"))
+		return nil, errors.New("Nil tx is forbidden here")
 	} else {
 		signedTx, err := signer.Sign(tx)
 		if err != nil {
@@ -221,7 +223,7 @@ func (self *BaseBlockchain) GetCallOpts(block uint64) CallOpts {
 
 func (self *BaseBlockchain) GetTxOpts(op string, nonce *big.Int, gasPrice *big.Int, value *big.Int) (TxOpts, error) {
 	result := TxOpts{}
-	operator := self.GetOperator(op)
+	operator := self.MustGetOperator(op)
 	var err error
 	if nonce == nil {
 		nonce, err = self.GetNextNonce(op)

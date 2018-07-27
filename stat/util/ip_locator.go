@@ -13,12 +13,12 @@ import (
 
 const geoDBFile = "GeoLite2-Country.mmdb"
 
-// ipLocator is a resolver that query data of IP from MaxMind's GeoLite2 database.
+// IPLocator is a resolver that query data of IP from MaxMind's GeoLite2 database.
 type IPLocator struct {
 	r *geoip2.Reader
 }
 
-// newIPLocator returns an instance of ipLocator.
+// NewIPLocator returns an instance of ipLocator.
 func NewIPLocator() (*IPLocator, error) {
 	dbPath := path.Join(common.CurrentDir(), geoDBFile)
 	r, err := geoip2.Open(dbPath)
@@ -32,7 +32,7 @@ func NewIPLocator() (*IPLocator, error) {
 func (il *IPLocator) IPToCountry(ip string) (string, error) {
 	IPParsed := net.ParseIP(ip)
 	if IPParsed == nil {
-		return "", fmt.Errorf("ip %s is not valid!", ip)
+		return "", fmt.Errorf("invalid ip %s", ip)
 	}
 	record, err := il.r.Country(IPParsed)
 	if err != nil {

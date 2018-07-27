@@ -46,7 +46,7 @@ func NewBlockchain(
 	base *blockchain.BaseBlockchain,
 	signer blockchain.Signer, nonce blockchain.NonceCorpus) (*Blockchain, error) {
 
-	base.RegisterOperator(HuobiOP, blockchain.NewOperator(signer, nonce))
+	base.MustRegisterOperator(HuobiOP, blockchain.NewOperator(signer, nonce))
 
 	return &Blockchain{
 		BaseBlockchain: base,

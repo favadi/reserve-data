@@ -226,7 +226,7 @@ func (self *Bittrex) Withdraw(token common.Token, amount *big.Int, address ether
 	return "", errors.New(resp.Error)
 }
 
-func bitttimestampToUint64(input string) uint64 {
+func bittrexTimestampToUint64(input string) (uint64, error) {
 	var t time.Time
 	var err error
 	len := len(input)
@@ -238,9 +238,9 @@ func bitttimestampToUint64(input string) uint64 {
 		t, err = time.Parse("2006-01-02T15:04:05.0", input)
 	}
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
-	return uint64(t.UnixNano() / int64(time.Millisecond))
+	return uint64(t.UnixNano() / int64(time.Millisecond)), nil
 }
 
 func (self *Bittrex) DepositStatus(
@@ -255,29 +255,33 @@ func (self *Bittrex) DepositStatus(
 	}
 	amount, err := strconv.ParseFloat(idParts[2], 64)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("cannot parse amount to float64 (%s)", err)
 	}
 	histories, err := self.interf.DepositHistory(currency)
 	if err != nil {
 		return "", err
 	}
 	for _, deposit := range histories.Result {
+		uint64Timestamp, err := bittrexTimestampToUint64(deposit.LastUpdated)
+		if err != nil {
+			return "", fmt.Errorf("cannot parse timestamp to uint64 (%s)", err)
+		}
 		log.Printf("Bittrex deposit history check: %v %v %v %v",
 			deposit.Currency == currency,
 			deposit.Amount-amount < bittrexEpsilon,
-			bitttimestampToUint64(deposit.LastUpdated) > timestamp/uint64(time.Millisecond),
+			uint64Timestamp > timestamp/uint64(time.Millisecond),
 			self.storage.IsNewBittrexDeposit(deposit.Id, id),
 		)
 		log.Printf("deposit.Currency: %s", deposit.Currency)
 		log.Printf("currency: %s", currency)
 		log.Printf("deposit.Amount: %f", deposit.Amount)
 		log.Printf("amount: %f", amount)
-		log.Printf("deposit.LastUpdated: %d", bitttimestampToUint64(deposit.LastUpdated))
+		log.Printf("deposit.LastUpdated: %d", uint64Timestamp)
 		log.Printf("timestamp: %d", timestamp/uint64(time.Millisecond))
 		log.Printf("is new deposit: %t", self.storage.IsNewBittrexDeposit(deposit.Id, id))
 		if deposit.Currency == currency &&
 			deposit.Amount-amount < bittrexEpsilon &&
-			bitttimestampToUint64(deposit.LastUpdated) > timestamp/uint64(time.Millisecond) &&
+			uint64Timestamp > timestamp/uint64(time.Millisecond) &&
 			self.storage.IsNewBittrexDeposit(deposit.Id, id) {
 			if err := self.storage.RegisterBittrexDeposit(deposit.Id, id); err != nil {
 				log.Printf("Register bittrex deposit error: %s", err.Error())

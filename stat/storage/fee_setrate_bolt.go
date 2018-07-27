@@ -33,7 +33,7 @@ func NewBoltFeeSetRateStorage(path string) (*BoltFeeSetRateStorage, error) {
 	var db *bolt.DB
 	db, err = bolt.Open(path, 0600, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {

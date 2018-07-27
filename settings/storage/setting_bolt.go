@@ -89,7 +89,7 @@ func NewBoltSettingStorage(dbPath string) (*BoltSettingStorage, error) {
 		return nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	storage := BoltSettingStorage{db}
 	return &storage, nil
