@@ -23,6 +23,7 @@ import (
 	"github.com/KyberNetwork/reserve-data/stat"
 	"github.com/KyberNetwork/reserve-data/stat/statpruner"
 	statstorage "github.com/KyberNetwork/reserve-data/stat/storage"
+	statutil "github.com/KyberNetwork/reserve-data/stat/util"
 	"github.com/KyberNetwork/reserve-data/world"
 )
 
@@ -115,6 +116,7 @@ type Config struct {
 
 	ChainType string
 	Setting   *settings.Settings
+	IPlocator *statutil.IPLocator
 }
 
 // GetStatConfig: load config to run stat server only
@@ -150,6 +152,10 @@ func (self *Config) AddStatConfig(settingPath SettingPaths) {
 		panic(err)
 	}
 
+	ipLocator, err := statutil.NewIPLocator()
+	if err != nil {
+		panic(err)
+	}
 	var statFetcherRunner stat.FetcherRunner
 	var statControllerRunner statpruner.ControllerRunner
 	if common.RunningMode() == common.SimulationMode {
@@ -178,6 +184,7 @@ func (self *Config) AddStatConfig(settingPath SettingPaths) {
 	self.FeeSetRateStorage = feeSetRateStorage
 	self.StatFetcherRunner = statFetcherRunner
 	self.EtherscanApiKey = apiKey
+	self.IPlocator = ipLocator
 }
 
 func (self *Config) AddCoreConfig(settingPath SettingPaths, kyberENV string) {

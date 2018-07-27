@@ -22,6 +22,7 @@
 
 - remove comparerates package (#374)
 
+- IPlocator is now init from start (#377)
 ### Compatibility
 
 ## 0.10.0 (2018-07-03)
