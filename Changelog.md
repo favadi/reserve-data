@@ -23,6 +23,9 @@
 - remove comparerates package (#374)
 
 - IPlocator is now init from start (#377)
+
+- refactor and fix skipping failed activity in Huobi Deposit (#373)
+
 ### Compatibility
 
 ## 0.10.0 (2018-07-03)
