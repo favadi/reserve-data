@@ -13,7 +13,8 @@ import (
 	ethereum "github.com/ethereum/go-ethereum/common"
 )
 
-func getTestSetting(t *testing.T, tmpDir string) *settings.Settings {
+func newTestSetting(t *testing.T, tmpDir string) *settings.Settings {
+	t.Helper()
 	boltSettingStorage, err := settingsstorage.NewBoltSettingStorage(filepath.Join(tmpDir, "setting.db"))
 	if err != nil {
 		t.Fatal(err)
@@ -37,7 +38,7 @@ func getTestSetting(t *testing.T, tmpDir string) *settings.Settings {
 	return setting
 }
 
-func testPositiveGetInternalToken(setting *settings.Settings, testToken common.Token, t *testing.T) {
+func testPositiveGetInternalToken(t *testing.T, setting *settings.Settings, testToken common.Token) {
 	tokens, err := setting.GetInternalTokens()
 	if err != nil {
 		t.Fatal(err)
@@ -62,7 +63,7 @@ func testPositiveGetInternalToken(setting *settings.Settings, testToken common.T
 	}
 }
 
-func testNegativeGetInternalToken(setting *settings.Settings, testToken common.Token, t *testing.T) {
+func testNegativeGetInternalToken(t *testing.T, setting *settings.Settings, testToken common.Token) {
 	tokens, err := setting.GetInternalTokens()
 	if err != nil {
 		t.Fatal(err)
@@ -107,7 +108,7 @@ func testGetActiveToken(setting *settings.Settings, testToken common.Token, t *t
 	}
 }
 
-func testGetToken(setting *settings.Settings, testToken common.Token, t *testing.T) {
+func testGetToken(t *testing.T, setting *settings.Settings, testToken common.Token) {
 	tokens, err := setting.GetAllTokens()
 	if err != nil {
 		t.Fatal(err)
@@ -138,7 +139,7 @@ func TestInternaTokenSetting(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	setting := getTestSetting(t, tmpDir)
+	setting := newTestSetting(t, tmpDir)
 	defer func() {
 		if rErr := os.RemoveAll(tmpDir); rErr != nil {
 			t.Error(rErr)
@@ -147,8 +148,8 @@ func TestInternaTokenSetting(t *testing.T) {
 	if err := setting.UpdateToken(testInternalToken); err != nil {
 		t.Fatal(err)
 	}
-	testPositiveGetInternalToken(setting, testInternalToken, t)
-	testGetToken(setting, testInternalToken, t)
+	testPositiveGetInternalToken(t, setting, testInternalToken)
+	testGetToken(t, setting, testInternalToken)
 	testGetActiveToken(setting, testInternalToken, t)
 }
 
@@ -158,7 +159,7 @@ func TestExternalTokenSetting(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	setting := getTestSetting(t, tmpDir)
+	setting := newTestSetting(t, tmpDir)
 	defer func() {
 		if rErr := os.RemoveAll(tmpDir); rErr != nil {
 			t.Error(rErr)
@@ -167,7 +168,7 @@ func TestExternalTokenSetting(t *testing.T) {
 	if err := setting.UpdateToken(testExternalToken); err != nil {
 		t.Fatal(err)
 	}
-	testGetToken(setting, testExternalToken, t)
+	testGetToken(t, setting, testExternalToken)
 	testGetActiveToken(setting, testExternalToken, t)
-	testNegativeGetInternalToken(setting, testExternalToken, t)
+	testNegativeGetInternalToken(t, setting, testExternalToken)
 }
