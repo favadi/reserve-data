@@ -35,11 +35,17 @@ var exchangeNameValue = map[string]ExchangeName{
 	"stable_exchange": StableExchange,
 }
 
+// Running Exchange get the exchangeEnvironment params and return the list of exchanges ID for the current run
+// It returns empty string slice if the ENV is empty string or not found
 func RunningExchanges() []string {
 	exchangesStr, ok := os.LookupEnv(exchangeEnv)
 	if !ok {
 		log.Print("WARNING: core is running without exchange")
 		return nil
+	}
+	if len(exchangesStr) == 0 {
+		log.Printf("WARNING: %s is empty, core is running without exchange", exchangeEnv)
+		return []string{}
 	}
 	exchanges := strings.Split(exchangesStr, ",")
 	return exchanges
