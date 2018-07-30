@@ -45,7 +45,7 @@ type HTTPServer struct {
 	authEnabled bool
 	auth        Authentication
 	r           *gin.Engine
-	blockchain  *blockchain.Blockchain
+	blockchain  Blockchain
 	setting     Setting
 }
 
