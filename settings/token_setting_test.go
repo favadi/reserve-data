@@ -39,6 +39,7 @@ func newTestSetting(t *testing.T, tmpDir string) *settings.Settings {
 }
 
 func testPositiveGetInternalToken(t *testing.T, setting *settings.Settings, testToken common.Token) {
+	t.Helper()
 	tokens, err := setting.GetInternalTokens()
 	if err != nil {
 		t.Fatal(err)
@@ -64,6 +65,7 @@ func testPositiveGetInternalToken(t *testing.T, setting *settings.Settings, test
 }
 
 func testNegativeGetInternalToken(t *testing.T, setting *settings.Settings, testToken common.Token) {
+	t.Helper()
 	tokens, err := setting.GetInternalTokens()
 	if err != nil {
 		t.Fatal(err)
@@ -83,6 +85,7 @@ func testNegativeGetInternalToken(t *testing.T, setting *settings.Settings, test
 }
 
 func testGetActiveToken(setting *settings.Settings, testToken common.Token, t *testing.T) {
+	t.Helper()
 	tokens, err := setting.GetActiveTokens()
 	if err != nil {
 		t.Fatal(err)
@@ -109,6 +112,7 @@ func testGetActiveToken(setting *settings.Settings, testToken common.Token, t *t
 }
 
 func testGetToken(t *testing.T, setting *settings.Settings, testToken common.Token) {
+	t.Helper()
 	tokens, err := setting.GetAllTokens()
 	if err != nil {
 		t.Fatal(err)
