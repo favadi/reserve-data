@@ -37,6 +37,7 @@ var exchangeNameValue = map[string]ExchangeName{
 
 // Running Exchange get the exchangeEnvironment params and return the list of exchanges ID for the current run
 // It returns empty string slice if the ENV is empty string or not found
+// DO NOT CALL this once httpserver has ran.
 func RunningExchanges() []string {
 	exchangesStr, ok := os.LookupEnv(exchangeEnv)
 	if !ok {
