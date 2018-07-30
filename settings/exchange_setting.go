@@ -40,13 +40,9 @@ var exchangeNameValue = map[string]ExchangeName{
 // DO NOT CALL this once httpserver has ran.
 func RunningExchanges() []string {
 	exchangesStr, ok := os.LookupEnv(exchangeEnv)
-	if !ok {
+	if (!ok) || (len(exchangesStr) == 0) {
 		log.Print("WARNING: core is running without exchange")
 		return nil
-	}
-	if len(exchangesStr) == 0 {
-		log.Printf("WARNING: %s is empty, core is running without exchange", exchangeEnv)
-		return []string{}
 	}
 	exchanges := strings.Split(exchangesStr, ",")
 	return exchanges
